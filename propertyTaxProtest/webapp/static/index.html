@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Property Tax Protest Helper</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; }
+.header { background: linear-gradient(135deg, #1a365d, #2563eb); color: white; padding: 32px 20px; text-align: center; }
+.header h1 { font-size: 28px; margin-bottom: 8px; }
+.header p { opacity: 0.85; font-size: 15px; }
+.container { max-width: 960px; margin: 0 auto; padding: 20px; }
+.search-box { background: white; border-radius: 12px; padding: 24px; margin: -30px auto 20px; max-width: 700px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); position: relative; z-index: 1; }
+.search-box input { width: 100%; padding: 14px 18px; font-size: 17px; border: 2px solid #ddd; border-radius: 8px; outline: none; transition: border 0.2s; }
+.search-box input:focus { border-color: #2563eb; }
+.search-box label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px; }
+.search-hint { font-size: 12px; color: #999; margin-top: 6px; }
+.results { background: white; border-radius: 8px; margin-top: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); max-height: 300px; overflow-y: auto; display: none; }
+.results .item { padding: 12px 18px; cursor: pointer; border-bottom: 1px solid #f0f0f0; transition: background 0.15s; }
+.results .item:hover { background: #f0f7ff; }
+.results .item .addr { font-weight: 600; }
+.results .item .detail { font-size: 13px; color: #777; margin-top: 2px; }
+.card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); display: none; }
+.card h2 { font-size: 20px; margin-bottom: 16px; color: #1a365d; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; }
+.card h3 { font-size: 16px; margin: 20px 0 10px; color: #374151; }
+.prop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.prop-item { background: #f8fafc; border-radius: 8px; padding: 12px; text-align: center; }
+.prop-item .label { font-size: 11px; text-transform: uppercase; color: #888; letter-spacing: 0.5px; }
+.prop-item .value { font-size: 22px; font-weight: 700; color: #1a365d; margin-top: 4px; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.badge.yes { background: #d1fae5; color: #065f46; }
+.badge.no { background: #fee2e2; color: #991b1b; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 10px 0; }
+th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #eee; }
+th { background: #f8fafc; font-weight: 600; color: #555; font-size: 12px; text-transform: uppercase; letter-spacing: 0.3px; position: sticky; top: 0; }
+tr:hover { background: #f8fafc; }
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 12px 0; }
+.stat { background: #f0f7ff; border-radius: 8px; padding: 10px; text-align: center; }
+.stat .label { font-size: 11px; color: #666; }
+.stat .val { font-size: 18px; font-weight: 700; color: #1a365d; }
+.protest-box { background: #fffbeb; border: 2px solid #f59e0b; border-radius: 12px; padding: 20px; margin-top: 20px; display: none; }
+.protest-box h3 { color: #92400e; margin-bottom: 12px; }
+.protest-val { font-size: 32px; font-weight: 800; color: #059669; }
+.protest-savings { font-size: 16px; color: #dc2626; margin-top: 4px; }
+.protest-breakdown { margin-top: 12px; font-size: 13px; color: #555; }
+.protest-breakdown .line { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dotted #ddd; }
+.protest-breakdown .line.total { font-weight: 700; border-bottom: 2px solid #333; color: #059669; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🏠 Property Tax Protest Helper</h1>
+  <p>Find comparable sales, document property issues, and build your protest case</p>
+</div>
+<div class="container">
+  <div class="search-box">
+    <label>Search your property</label>
+    <input type="text" id="searchInput" placeholder="Enter address (e.g. 404 Vine St) or account number" autocomplete="off">
+    <div class="search-hint">Type at least 3 characters to search</div>
+    <div class="results" id="searchResults"></div>
+  </div>
+  <div class="loading" id="loading" style="text-align:center;padding:40px;color:#999;display:none">
+    <div style="display:inline-block;width:30px;height:30px;border:3px solid #ddd;border-top-color:#2563eb;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+    <p style="margin-top:12px">Finding your property and comps...</p>
+  </div>
+  <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+
+  <!-- Property Card -->
+  <div class="card" id="propertyCard">
+    <h2 id="propAddress">—</h2>
+    <div style="margin-bottom:12px">
+      <span>Account: <strong id="propAccount">—</strong></span>
+      <span style="margin-left:16px">Homestead: <span id="propHomestead" class="badge">—</span></span>
+    </div>
+    <div class="prop-grid">
+      <div class="prop-item"><div class="label">Appraised Value</div><div class="value" id="propValue">—</div></div>
+      <div class="prop-item"><div class="label">Bedrooms</div><div class="value" id="propBeds">—</div></div>
+      <div class="prop-item"><div class="label">Bathrooms</div><div class="value" id="propBaths">—</div></div>
+      <div class="prop-item"><div class="label">Living SqFt</div><div class="value" id="propSqft">—</div></div>
+      <div class="prop-item"><div class="label">Lot SqFt</div><div class="value" id="propLot">—</div></div>
+      <div class="prop-item"><div class="label">Year Built</div><div class="value" id="propYear">—</div></div>
+      <div class="prop-item"><div class="label">$/SqFt</div><div class="value" id="propPpsf">—</div></div>
+      <div class="prop-item"><div class="label">Last Sold</div><div class="value" id="propSold" style="font-size:15px">—</div></div>
+    </div>
+  </div>
+
+  <!-- Property Disclosures -->
+  <div class="card" id="disclosureCard" style="display:none">
+    <h2>📋 Property Disclosures &amp; Adjustments</h2>
+    <p style="color:#777;font-size:13px;margin-bottom:16px">Document property-specific issues that affect value. Repair costs with estimates are deducted from the recommended protest value.</p>
+
+    <h3>🏚️ Age &amp; Condition Concerns</h3>
+    <div style="margin-bottom:16px">
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="age" value="Roof nearing end of life (15+ years)"> Roof nearing end of life (15+ years)</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="age" value="HVAC system needs replacement"> HVAC system needs replacement</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="age" value="Foundation issues (cracks, settling)"> Foundation issues (cracks, settling)</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="age" value="Plumbing needs significant repair"> Plumbing needs significant repair</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="age" value="Electrical system outdated"> Electrical system outdated</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="age" value="Windows need replacement"> Windows need replacement</label>
+      </div>
+    </div>
+
+    <h3>🔧 Ongoing Maintenance / Repairs Needed</h3>
+    <div style="margin-bottom:16px">
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="maint" value="Water damage / mold remediation needed"> Water damage / mold remediation needed</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="maint" value="Fence damaged or missing"> Fence damaged or missing</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="maint" value="Driveway / walkway deterioration"> Driveway / walkway deterioration</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="maint" value="Pest / termite damage"> Pest / termite damage</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="maint" value="Pool/spa needs repair"> Pool/spa needs repair</label>
+      </div>
+    </div>
+
+    <h3>🏗️ External Factors</h3>
+    <div style="margin-bottom:16px">
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="ext" value="Data center construction nearby"> Data center construction nearby</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="ext" value="Commercial development adjacent to property"> Commercial development adjacent to property</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="ext" value="Highway / road noise"> Highway / road noise</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="ext" value="Power lines / utility easement on property"> Power lines / utility easement on property</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="ext" value="Flood zone / drainage issues"> Flood zone / drainage issues</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="ext" value="Increased traffic from nearby development"> Increased traffic from nearby development</label>
+      </div>
+    </div>
+
+    <div style="margin-top:8px">
+      <label style="font-size:13px;color:#555">Other (describe):</label>
+      <textarea id="discOther" rows="2" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:13px;margin-top:4px;resize:vertical" placeholder="Describe any other issues affecting property value..."></textarea>
+    </div>
+
+    <h3 style="margin-top:24px">💰 Verified Repair Costs</h3>
+    <p style="color:#777;font-size:12px;margin-bottom:10px">Enter documented repair estimates. These amounts will be deducted from the median market price in your protest recommendation.</p>
+    <div id="repairList"></div>
+    <button onclick="addRepairRow()" style="margin-top:8px;padding:8px 16px;background:#2563eb;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px">+ Add Repair Cost</button>
+
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid #eee">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:600;color:#555">Total Repair Deductions:</span>
+        <span style="font-size:22px;font-weight:800;color:#dc2626" id="totalRepairs">$0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Neighborhood Comps -->
+  <div class="card" id="nbhdCard">
+    <h2>📍 Neighborhood Comps — Sold Last 12 Months</h2>
+    <p id="nbhdLabel" style="color:#777;font-size:13px;margin-bottom:10px"></p>
+    <div class="stats-row" id="nbhdStats"></div>
+    <div style="max-height:350px;overflow-y:auto">
+      <table><thead><tr><th>Address</th><th>Sold</th><th>Appraised</th><th>Bed</th><th>Bath</th><th>SqFt</th><th>Lot</th><th>Year</th><th>$/SF</th></tr></thead><tbody id="nbhdTable"></tbody></table>
+    </div>
+  </div>
+
+  <!-- Zip Comps -->
+  <div class="card" id="zipCard">
+    <h2>📊 ZIP Code Comps — Similar Specs, Sold Last 12 Months</h2>
+    <p id="zipLabel" style="color:#777;font-size:13px;margin-bottom:10px"></p>
+    <div class="stats-row" id="zipStats"></div>
+    <div style="max-height:400px;overflow-y:auto">
+      <table><thead><tr><th>Address</th><th>Sold</th><th>Appraised</th><th>Bed</th><th>Bath</th><th>SqFt</th><th>Lot</th><th>Year</th><th>$/SF</th></tr></thead><tbody id="zipTable"></tbody></table>
+    </div>
+  </div>
+
+  <!-- Protest Recommendation -->
+  <div class="protest-box" id="protestBox">
+    <h3>⚖️ Protest Recommendation</h3>
+    <p>Based on comparable sales analysis and your property disclosures:</p>
+    <div class="protest-val" id="protestValue">—</div>
+    <div class="protest-savings" id="protestSavings">—</div>
+    <div class="protest-breakdown" id="protestBreakdown"></div>
+    <p style="margin-top:12px;font-size:13px;color:#666" id="protestExplain"></p>
+    <div id="protestDisclosures" style="margin-top:12px;font-size:13px;display:none">
+      <strong style="color:#92400e">Documented Property Issues:</strong>
+      <ul id="protestDiscList" style="margin:6px 0 0 18px;color:#555"></ul>
+    </div>
+    <div style="margin-top:20px;text-align:center">
+      <button onclick="downloadProtest()" style="padding:14px 32px;background:linear-gradient(135deg,#059669,#047857);color:white;border:none;border-radius:8px;cursor:pointer;font-size:16px;font-weight:700;box-shadow:0 4px 12px rgba(5,150,105,0.3);transition:transform 0.15s">📄 Draft Protest Document — Download</button>
+      <p style="margin-top:6px;font-size:12px;color:#888">Downloads an HTML file. Open it and print to PDF (⌘P / Ctrl+P) for upload to your local Appraisal District.</p>
+    </div>
+  </div>
+
+  <!-- All Similar -->
+  <div class="card" id="allCard">
+    <h2>🏘️ All Similar Properties in ZIP (Current Appraisals)</h2>
+    <p id="allLabel" style="color:#777;font-size:13px;margin-bottom:10px"></p>
+    <div class="stats-row" id="allStats"></div>
+  </div>
+</div>
+
+<div class="footer" style="text-align:center;padding:30px;color:#999;font-size:13px">
+  Data source: Local Appraisal District Certified Values<br>
+  This tool is for informational purposes only. Not legal or tax advice.
+</div>
+
+<style>
+.disc-row { padding: 6px 0; }
+.disc-row label { font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.disc-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: #2563eb; flex-shrink: 0; }
+.repair-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+.repair-row input[type="text"] { flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+.repair-row input[type="number"] { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+.repair-row button { background: #fee2e2; color: #991b1b; border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer; font-size: 13px; }
+.repair-row button:hover { background: #fca5a5; }
+@media (max-width: 600px) {
+  .header h1 { font-size: 22px; }
+  .prop-grid { grid-template-columns: repeat(2, 1fr); }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  table { font-size: 11px; }
+  .repair-row { flex-wrap: wrap; }
+}
+</style>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmt = n => '$' + Math.round(n).toLocaleString();
+let debounce;
+let _compsData = null;
+let _baseMedian = 0;
+
+// Search
+$('searchInput').addEventListener('input', function() {
+  clearTimeout(debounce);
+  const q = this.value.trim();
+  if (q.length < 3) { $('searchResults').style.display = 'none'; return; }
+  debounce = setTimeout(() => {
+    fetch('/api/search?q=' + encodeURIComponent(q))
+      .then(r => r.json())
+      .then(data => {
+        const el = $('searchResults');
+        if (!data.length) { el.style.display = 'none'; return; }
+        el.innerHTML = data.map(r => {
+          const v = parseFloat(r.TOT_VAL) || 0;
+          return '<div class="item" onclick="selectProperty(\'' + r.ACCOUNT_NUM + '\')">' +
+            '<div class="addr">' + r.STREET_NUM + ' ' + r.FULL_STREET_NAME + ', ' + r.PROPERTY_CITY + ' ' + r.ZIP + '</div>' +
+            '<div class="detail">' + fmt(v) + ' · ' + (r.NUM_BEDROOMS||'?') + 'bd/' + (r.NUM_FULL_BATHS||'?') + 'ba · ' + (r.TOT_LIVING_AREA_SF||'?') + ' sqft · Built ' + (r.YR_BUILT||'?') + '</div>' +
+          '</div>';
+        }).join('');
+        el.style.display = 'block';
+      });
+  }, 300);
+});
+
+function selectProperty(account) {
+  $('searchResults').style.display = 'none';
+  ['propertyCard','nbhdCard','zipCard','allCard','protestBox','disclosureCard'].forEach(id => $(id).style.display = 'none');
+  $('loading').style.display = 'block';
+  // Reset disclosures
+  document.querySelectorAll('.disc-check').forEach(cb => cb.checked = false);
+  $('discOther').value = '';
+  $('repairList').innerHTML = '';
+  $('totalRepairs').textContent = '$0';
+
+  Promise.all([
+    fetch('/api/property/' + account).then(r => r.json()),
+    fetch('/api/comps/' + account).then(r => r.json())
+  ]).then(([prop, comps]) => {
+    $('loading').style.display = 'none';
+    _compsData = comps;
+    renderProperty(prop);
+    renderComps(prop, comps);
+    $('disclosureCard').style.display = 'block';
+  });
+}
+
+function renderProperty(p) {
+  const val = parseFloat(p.TOT_VAL);
+  const sqft = parseFloat(p.TOT_LIVING_AREA_SF) || 0;
+  const fb = parseInt(p.NUM_FULL_BATHS) || 0;
+  const hb = parseInt(p.NUM_HALF_BATHS) || 0;
+  const bath = hb > 0 ? fb + 'F/' + hb + 'H' : String(fb);
+  $('propAddress').textContent = p.STREET_NUM + ' ' + p.FULL_STREET_NAME + ', ' + p.PROPERTY_CITY + ' ' + p.ZIP;
+  $('searchInput').value = p.STREET_NUM + ' ' + p.FULL_STREET_NAME;
+  $('propAccount').textContent = p.ACCOUNT_NUM;
+  $('propValue').textContent = fmt(val);
+  $('propBeds').textContent = p.NUM_BEDROOMS || '—';
+  $('propBaths').textContent = bath;
+  $('propSqft').textContent = sqft ? sqft.toLocaleString() : '—';
+  $('propLot').textContent = p.AREA_SIZE ? parseInt(p.AREA_SIZE).toLocaleString() : '—';
+  $('propYear').textContent = p.YR_BUILT || '—';
+  $('propPpsf').textContent = sqft > 0 ? fmt(val / sqft) : '—';
+  $('propSold').textContent = p.DEED_TXFR_DATE || '—';
+  const hs = $('propHomestead');
+  if (p.HOMESTEAD) { hs.textContent = 'Yes ✓'; hs.className = 'badge yes'; }
+  else { hs.textContent = 'No'; hs.className = 'badge no'; }
+  $('propertyCard').style.display = 'block';
+  window._prop = p;
+}
+
+function renderComps(prop, comps) {
+  const propVal = parseFloat(prop.TOT_VAL);
+  renderTable('nbhdTable', comps.neighborhood_comps);
+  renderStats('nbhdStats', comps.neighborhood_stats, propVal);
+  $('nbhdLabel').textContent = 'Neighborhood: ' + prop.NBHD_CD + ' · ' + comps.neighborhood_stats.count + ' sales found';
+  $('nbhdCard').style.display = comps.neighborhood_comps.length ? 'block' : 'none';
+  renderTable('zipTable', comps.zip_comps);
+  renderStats('zipStats', comps.zip_stats, propVal);
+  $('zipLabel').textContent = 'ZIP ' + prop.ZIP + ' · ' + comps.zip_stats.count + ' similar sales found';
+  $('zipCard').style.display = comps.zip_comps.length ? 'block' : 'none';
+  renderStats('allStats', comps.all_similar_stats, propVal);
+  $('allLabel').textContent = comps.all_similar_stats.count + ' properties with matching specs in ZIP ' + prop.ZIP;
+  $('allCard').style.display = comps.all_similar_stats.count ? 'block' : 'none';
+  updateProtest();
+}
+
+function renderTable(id, rows) {
+  $(id).innerHTML = rows.map(r => {
+    const v = parseFloat(r.TOT_VAL);
+    const sf = parseFloat(r.TOT_LIVING_AREA_SF) || 0;
+    const fb = parseInt(r.NUM_FULL_BATHS) || 0;
+    const hb = parseInt(r.NUM_HALF_BATHS) || 0;
+    const bath = hb > 0 ? fb + '/' + hb : String(fb);
+    return '<tr><td>' + (r.ADDRESS||'—') + '</td><td>' + (r.DEED_TXFR_DATE||'—') + '</td><td>' + fmt(v) + '</td><td>' + (r.NUM_BEDROOMS||'—') + '</td><td>' + bath + '</td><td>' + (sf?sf.toLocaleString():'—') + '</td><td>' + (r.AREA_SIZE?parseInt(r.AREA_SIZE).toLocaleString():'—') + '</td><td>' + (r.YR_BUILT||'—') + '</td><td>' + (sf>0?fmt(v/sf):'—') + '</td></tr>';
+  }).join('');
+}
+
+function renderStats(id, stats, propVal) {
+  if (!stats.count) { $(id).innerHTML = ''; return; }
+  const diff = propVal - stats.median;
+  const diffClass = diff > 0 ? 'color:#dc2626' : 'color:#059669';
+  const sign = diff > 0 ? '+' : '';
+  $(id).innerHTML =
+    '<div class="stat"><div class="label">Count</div><div class="val">' + stats.count + '</div></div>' +
+    '<div class="stat"><div class="label">Median</div><div class="val">' + fmt(stats.median) + '</div></div>' +
+    '<div class="stat"><div class="label">Average</div><div class="val">' + fmt(stats.average) + '</div></div>' +
+    '<div class="stat"><div class="label">You vs Median</div><div class="val" style="' + diffClass + '">' + sign + fmt(diff) + '</div></div>';
+}
+
+// Repair rows
+function addRepairRow() {
+  const div = document.createElement('div');
+  div.className = 'repair-row';
+  div.innerHTML = '<input type="text" placeholder="Description (e.g. Roof replacement)" class="repair-desc">' +
+    '<input type="number" placeholder="Cost ($)" class="repair-cost" min="0" step="100">' +
+    '<button onclick="this.parentElement.remove();updateProtest()">✕</button>';
+  div.querySelector('.repair-cost').addEventListener('input', updateProtest);
+  $('repairList').appendChild(div);
+}
+
+function getTotalRepairs() {
+  let total = 0;
+  document.querySelectorAll('.repair-cost').forEach(el => {
+    const v = parseFloat(el.value);
+    if (v > 0) total += v;
+  });
+  return total;
+}
+
+function getDisclosures() {
+  const items = [];
+  document.querySelectorAll('.disc-check:checked').forEach(cb => items.push(cb.value));
+  const other = $('discOther').value.trim();
+  if (other) items.push(other);
+  return items;
+}
+
+function updateProtest() {
+  if (!_compsData || !window._prop) return;
+  const propVal = parseFloat(window._prop.TOT_VAL);
+  const comps = _compsData;
+  const repairs = getTotalRepairs();
+  const disclosures = getDisclosures();
+
+  $('totalRepairs').textContent = fmt(repairs);
+
+  const medians = [comps.neighborhood_stats, comps.zip_stats, comps.all_similar_stats]
+    .filter(s => s.count > 0).map(s => s.median);
+  if (medians.length === 0) { $('protestBox').style.display = 'none'; return; }
+
+  const avgMedian = medians.reduce((a, b) => a + b, 0) / medians.length;
+  _baseMedian = Math.round(avgMedian / 1000) * 1000;
+  const recommended = _baseMedian - repairs;
+  const savings = propVal - recommended;
+
+  if (savings <= 0 && repairs === 0) { $('protestBox').style.display = 'none'; return; }
+
+  $('protestValue').textContent = fmt(recommended);
+  $('protestSavings').textContent = 'Potential reduction: ' + fmt(savings > 0 ? savings : 0);
+
+  // Breakdown
+  let bk = '<div class="line"><span>Comp median (avg of ' + medians.length + ' sets)</span><span>' + fmt(_baseMedian) + '</span></div>';
+  if (repairs > 0) {
+    document.querySelectorAll('.repair-row').forEach(row => {
+      const desc = row.querySelector('.repair-desc').value || 'Repair';
+      const cost = parseFloat(row.querySelector('.repair-cost').value) || 0;
+      if (cost > 0) bk += '<div class="line"><span>− ' + desc + '</span><span style="color:#dc2626">-' + fmt(cost) + '</span></div>';
+    });
+  }
+  bk += '<div class="line total"><span>Recommended protest value</span><span>' + fmt(recommended) + '</span></div>';
+  $('protestBreakdown').innerHTML = bk;
+
+  $('protestExplain').textContent = 'Use this as your opinion of value when filing with your Appraisal District.' + (repairs > 0 ? ' Attach repair estimates as supporting documentation.' : '');
+
+  // Disclosures list
+  if (disclosures.length > 0) {
+    $('protestDiscList').innerHTML = disclosures.map(d => '<li>' + d + '</li>').join('');
+    $('protestDisclosures').style.display = 'block';
+  } else {
+    $('protestDisclosures').style.display = 'none';
+  }
+
+  $('protestBox').style.display = 'block';
+}
+
+// Listen for disclosure changes
+document.addEventListener('change', function(e) {
+  if (e.target.classList.contains('disc-check')) updateProtest();
+});
+$('discOther').addEventListener('input', updateProtest);
+</script>
+<script src="/static/protest.js"></script>
+</body>
+</html>
