@@ -87,7 +87,7 @@ CANONICAL_TABLES = ("property", "valuation", "improvement", "land", "exemption",
 SUMMARY_SQL = """
 CREATE TABLE property_summary AS
 WITH main AS (
-    SELECT account, beds, full_baths, half_baths, living_sqft, year_built,
+    SELECT account, beds, full_baths, half_baths, living_sqft, year_built, eff_year_built, quality, condition,
            row_number() OVER (PARTITION BY account ORDER BY coalesce(living_sqft, 0) DESC, seq) AS rn
     FROM improvement WHERE kind = 'main'
 )
@@ -96,6 +96,7 @@ SELECT p.account, p.street_num, p.street_name, p.city, p.zip, p.state_cd, p.nbhd
        v.appraised_val, v.improvement_val, v.land_val, v.market_val,
        prev.market_val AS prior_market_val,
        m.beds, m.full_baths, m.half_baths, m.living_sqft, m.year_built,
+       m.eff_year_built, m.quality, m.condition,
        l.size_sqft AS lot_sqft,
        EXISTS (SELECT 1 FROM exemption e WHERE e.account = p.account AND e.code = 'HS') AS homestead,
        p.parcel_id, p.lat, p.lon
@@ -112,6 +113,7 @@ CREATE UNIQUE INDEX idx_sum_account ON property_summary(account);
 CREATE INDEX idx_sum_street ON property_summary(street_num, street_name);
 CREATE INDEX idx_sum_zip ON property_summary(zip);
 CREATE INDEX idx_sum_nbhd ON property_summary(nbhd);
+CREATE INDEX idx_sum_lat ON property_summary(lat);
 """
 
 PARCEL_INDEX = "CREATE INDEX IF NOT EXISTS idx_property_parcel ON property(parcel_id)"

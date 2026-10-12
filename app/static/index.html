@@ -89,6 +89,17 @@ tr:hover { background: #f8fafc; }
     </div>
   </div>
 
+  <!-- Equity analysis (§42.26(a)(3)) -->
+  <div class="card" id="equityCard">
+    <h2>⚖️ Comparable Homes, Adjusted to Yours</h2>
+    <p id="equityLabel" style="color:#777;font-size:13px;margin-bottom:10px"></p>
+    <div class="stats-row" id="equityStats"></div>
+    <div style="max-height:420px;overflow:auto">
+      <table><thead><tr><th>Address</th><th>Miles</th><th>SqFt</th><th>Year</th><th>Appraised</th><th>Size adj.</th><th>Age adj.</th><th>Land adj.</th><th>Adjusted</th></tr></thead><tbody id="equityTable"></tbody></table>
+    </div>
+    <p id="equityMethod" style="color:#777;font-size:12px;margin-top:8px"></p>
+  </div>
+
   <!-- Property Disclosures -->
   <div class="card" id="disclosureCard" style="display:none">
     <h2>📋 Property Disclosures &amp; Adjustments</h2>
@@ -212,8 +223,16 @@ tr:hover { background: #f8fafc; }
       <input type="text" id="ownerName" autocomplete="name" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin-top:4px">
     </div>
     <div style="margin-top:20px;text-align:center">
-      <button onclick="downloadProtest()" style="padding:14px 32px;background:linear-gradient(135deg,#059669,#047857);color:white;border:none;border-radius:8px;cursor:pointer;font-size:16px;font-weight:700;box-shadow:0 4px 12px rgba(5,150,105,0.3);transition:transform 0.15s">📄 Draft Protest Document — Download</button>
-      <p style="margin-top:6px;font-size:12px;color:#888">Downloads an HTML file. Open it and print to PDF (⌘P / Ctrl+P) for upload to your local Appraisal District.</p>
+      <button id="downloadBtn" onclick="downloadProtest()" style="padding:14px 32px;background:linear-gradient(135deg,#059669,#047857);color:white;border:none;border-radius:8px;cursor:pointer;font-size:16px;font-weight:700;box-shadow:0 4px 12px rgba(5,150,105,0.3);transition:transform 0.15s">📄 Download Protest Letter (PDF)</button>
+      <p id="downloadMsg" style="margin-top:6px;font-size:12px;color:#888">Sign it, attach any repair estimates, and file it with your appraisal district.</p>
+    </div>
+    <div style="margin-top:18px;padding-top:12px;border-top:1px solid #f3d27a;font-size:13px;color:#555">
+      <strong style="color:#92400e">Before you file</strong>
+      <ul style="margin:6px 0 0 18px">
+        <li>File by <strong>May 15</strong>, or 30 days after your appraisal notice was delivered, whichever is later (Texas Tax Code §41.44). You can file online through <a id="protestLink" target="_blank" rel="noopener">your appraisal district</a>.</li>
+        <li>Ask the appraisal district for a copy of the evidence it plans to use at your hearing (Texas Tax Code §41.461). It must make that evidence available to you at least 14 days before the hearing.</li>
+        <li>Bring this letter and your attachments to the hearing; you can also present them at an informal review first.</li>
+      </ul>
     </div>
   </div>
 
@@ -261,6 +280,7 @@ let debounce;
 let _counties = {};
 let _county = null;
 let _compsData = null;
+let _equity = null;
 let _baseMedian = 0;
 
 // Counties
@@ -285,7 +305,8 @@ function setCounty(id) {
   $('searchInput').value = '';
   $('searchResults').style.display = 'none';
   $('searchResults').innerHTML = '';
-  ['propertyCard','nbhdCard','zipCard','allCard','protestBox','disclosureCard'].forEach(id => $(id).style.display = 'none');
+  ['propertyCard','equityCard','nbhdCard','zipCard','allCard','protestBox','disclosureCard'].forEach(id => $(id).style.display = 'none');
+  $('protestLink').href = _county.protest_url;
 }
 
 function api(path) {
@@ -319,7 +340,7 @@ $('searchResults').addEventListener('click', function(e) {
 function selectProperty(account) {
   $('searchResults').style.display = 'none';
   $('searchResults').innerHTML = '';
-  ['propertyCard','nbhdCard','zipCard','allCard','protestBox','disclosureCard'].forEach(id => $(id).style.display = 'none');
+  ['propertyCard','equityCard','nbhdCard','zipCard','allCard','protestBox','disclosureCard'].forEach(id => $(id).style.display = 'none');
   $('loading').style.display = 'block';
   document.querySelectorAll('.disc-check').forEach(cb => cb.checked = false);
   $('discOther').value = '';
@@ -327,11 +348,13 @@ function selectProperty(account) {
   $('totalRepairs').textContent = '$0';
 
   const acct = '/' + encodeURIComponent(account);
-  Promise.all([api('/property' + acct), api('/comps' + acct)]).then(([prop, comps]) => {
+  Promise.all([api('/property' + acct), api('/comps' + acct), api('/equity' + acct)]).then(([prop, comps, eq]) => {
     $('loading').style.display = 'none';
     if (prop.error || comps.error) { alert(prop.error || comps.error); return; }
     _compsData = comps;
+    _equity = eq;
     renderProperty(prop);
+    renderEquity(prop, eq);
     renderComps(prop, comps);
     $('disclosureCard').style.display = 'block';
   });
@@ -372,6 +395,38 @@ function renderProperty(p) {
   else { hs.textContent = 'No'; hs.className = 'badge no'; }
   $('propertyCard').style.display = 'block';
   window._prop = p;
+}
+
+function renderEquity(prop, eq) {
+  const val = num(prop.appraised_val);
+  if (!eq.comps || !eq.comps.length) { $('equityCard').style.display = 'none'; return; }
+  const c = eq.criteria, p = eq.params;
+  const yearKey = c.year_basis.startsWith('effective') ? 'eff_year_built' : 'year_built';
+  const where = eq.search.method === 'radius' ? 'within ' + eq.search.radius_mi + ' mi' : 'in neighborhood ' + eq.search.nbhd;
+  $('equityLabel').textContent = (eq.available ? eq.count + ' most similar homes ' : 'Only ' + eq.comps.length + ' similar homes ') + where +
+    ': same property category' + (c.quality ? ', quality grade ' + c.quality : '') + (c.condition ? ', condition ' + c.condition : '') + ', ' +
+    c.sqft_low.toLocaleString() + '–' + c.sqft_high.toLocaleString() + ' sq ft, ' + c.year_basis + ' ' + c.year_low + '–' + c.year_high + '.' +
+    (eq.available ? '' : ' Not enough for an adjusted comparison (' + p.min_comps + ' needed).');
+  const sign = n => (n > 0 ? '+' : n < 0 ? '−' : '') + '$' + Math.abs(n).toLocaleString();
+  $('equityTable').innerHTML =
+    '<tr style="background:#e8f5e9;font-weight:600"><td>' + esc(addrOf(prop)) + ' (you)</td><td></td><td>' + num(prop.living_sqft).toLocaleString() +
+    '</td><td>' + esc(prop[yearKey] || '') + '</td><td>' + fmt(val) + '</td><td></td><td></td><td></td><td></td></tr>' +
+    eq.comps.map(r => '<tr><td>' + esc(r.address) + '</td><td>' + (r.distance_mi == null ? '' : r.distance_mi.toFixed(2)) + '</td><td>' +
+      num(r.living_sqft).toLocaleString() + '</td><td>' + esc(r[yearKey] || '') + '</td><td>' + fmt(r.appraised_val) + '</td><td>' +
+      sign(r.size_adj) + '</td><td>' + sign(r.age_adj) + '</td><td>' + sign(r.land_adj) + '</td><td><strong>' + fmt(r.adjusted_val) + '</strong></td></tr>').join('');
+  if (eq.available) {
+    const d = val - eq.median_adjusted;
+    $('equityStats').innerHTML =
+      '<div class="stat"><div class="label">Median Adjusted</div><div class="val">' + fmt(eq.median_adjusted) + '</div></div>' +
+      '<div class="stat"><div class="label">Unadjusted Median</div><div class="val">' + fmt(eq.unadjusted_median) + '</div></div>' +
+      '<div class="stat"><div class="label">You vs Median</div><div class="val" style="' + (d > 0 ? 'color:#dc2626' : 'color:#059669') + '">' + (d > 0 ? '+' : '') + fmt(d) + '</div></div>';
+  } else {
+    $('equityStats').innerHTML = '';
+  }
+  $('equityMethod').textContent = 'Each comparable is adjusted to your home: living area at its own improvement value per sq ft, age at ' +
+    (p.age_rate * 100).toFixed(1) + '% of improvement value per year, and land by the difference in land value. ' +
+    'This follows the "median appraised value of comparable properties, appropriately adjusted" test in Texas Tax Code §42.26(a)(3).';
+  $('equityCard').style.display = 'block';
 }
 
 // Plain-language description of a comparison set's criteria (shared with protest.js).
@@ -478,11 +533,13 @@ function updateProtest() {
 
   $('totalRepairs').textContent = fmt(repairs);
 
+  // Mirrors opinion_of_value() in app/letter.py, which builds the PDF.
   const sets = compSets();
-  if (sets.length === 0) { $('protestBox').style.display = 'none'; return; }
-
-  const avgMedian = sets.reduce((a, s) => a + s.set.stats.median, 0) / sets.length;
-  _baseMedian = Math.round(avgMedian / 1000) * 1000;
+  const eq = _equity || {};
+  const useEquity = !!(eq.available && eq.supports_reduction);
+  if (!useEquity && sets.length === 0) { $('protestBox').style.display = 'none'; return; }
+  _baseMedian = useEquity ? eq.median_adjusted
+    : Math.round(sets.reduce((a, s) => a + s.set.stats.median, 0) / sets.length / 1000) * 1000;
   const recommended = _baseMedian - repairs;
   const savings = propVal - recommended;
 
@@ -491,7 +548,8 @@ function updateProtest() {
   $('protestValue').textContent = fmt(recommended);
   $('protestSavings').textContent = 'Potential reduction: ' + fmt(savings);
 
-  let bk = '<div class="line"><span>Average of ' + sets.length + ' median appraised values</span><span>' + fmt(_baseMedian) + '</span></div>';
+  let bk = '<div class="line"><span>' + (useEquity ? 'Median adjusted value of ' + eq.count + ' comparable homes'
+    : 'Average of ' + sets.length + ' median appraised values') + '</span><span>' + fmt(_baseMedian) + '</span></div>';
   getRepairItems().forEach(item => {
     bk += '<div class="line"><span>− ' + esc(item.desc) + '</span><span style="color:#dc2626">-' + fmt(item.cost) + '</span></div>';
   });

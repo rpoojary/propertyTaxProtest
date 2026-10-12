@@ -8,6 +8,7 @@ Sources (see docs/data-sources.md):
            IMPROVEMENT_DETAIL_ATTR gives Bedrooms, Plumbing (bath count) and Condition.
 """
 import os
+import re
 
 from app.stats import parse_date, to_float, to_int
 from pipeline.build_db import open_table, open_text
@@ -20,6 +21,13 @@ ATTR_DESC = slice(52, 77)
 ATTR_CODE = slice(77, 87)
 
 HOMESTEAD_CODES = {"HS", "DVHS", "DVHSS"}
+
+
+def dwelling_class(classes):
+    """'1750S,GB2' -> 'GB2': the residence class among the segment classes."""
+    codes = [c.strip() for c in (classes or "").split(",") if c.strip()]
+    main = [c for c in codes if re.fullmatch(r"[A-Z]{2}\d+", c)]
+    return (main or codes or [None])[0]
 
 
 def split_baths(value):
@@ -96,7 +104,7 @@ def build(out, cfg, log=print):
             "eff_year_built": to_int(r.get("imprvEffYearBuilt")) or None,
             "living_sqft": to_float(r["imprvMainArea"]) or None,
             "beds": to_int(beds.get(pid)), "full_baths": full, "half_baths": half,
-            "quality": (r.get("imprvClasses") or "").strip() or None, "condition": condition.get(pid),
+            "quality": dwelling_class(r.get("imprvClasses")), "condition": condition.get(pid),
         })
         out.add("land", {"account": pid, "seq": 1,
                          "size_sqft": to_float(r["land_sqft"]) or to_float(r["landTotalSqft"]) or None,

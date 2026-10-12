@@ -10,7 +10,8 @@ ROW_FIELDS = """account, street_num || ' ' || street_name AS address, deed_date,
 
 PROPERTY_FIELDS = """account, street_num, street_name, city, zip, state_cd, nbhd, deed_date,
     appraised_val, improvement_val, land_val, beds, full_baths, half_baths,
-    living_sqft, year_built, lot_sqft, homestead, lat, lon, market_val, prior_market_val"""
+    living_sqft, year_built, lot_sqft, homestead, lat, lon, market_val, prior_market_val,
+    eff_year_built, quality, condition"""
 
 SQFT_BAND = 0.15
 MAX_ROWS = 200

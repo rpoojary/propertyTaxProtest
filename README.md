@@ -85,7 +85,18 @@ publishes no sale prices) and `county_meta`. The web app reads
 `property_summary`, one row per property derived from those tables in
 `app/db.py`.
 
-## How comparisons work (current, before Phase 4)
+## How the protest value is computed
+
+The main evidence is an unequal-appraisal analysis (`app/equity.py`,
+Texas Tax Code §42.26(a)(3)): up to 15 nearby comparable homes (same
+category and, where published, quality grade and condition; similar size
+and age), each adjusted to the subject for living area, age and land value.
+The median adjusted value is the indicated value; the suggested opinion of
+value is that median minus any repair costs the owner enters. The PDF letter
+(`app/letter.py`, `POST /api/<county>/letter/<account>`) shows the full
+adjustment grid and is refused when the data does not support a reduction.
+
+## Supporting comparison sets
 
 For the selected property, the app builds three sets from the same state
 property category (e.g. residential):
@@ -97,7 +108,6 @@ property category (e.g. residential):
 3. **ZIP, all similar:** same ZIP, bedrooms, full and half baths, and size
    band, regardless of deed date.
 
-The suggested value is the average of the sets' median appraised values
-(rounded to $1,000), minus any repair costs the owner enters. The letter
-states each set's exact criteria, count, median and range. Phase 4 replaces
-this with an adjusted-median equity analysis.
+These are shown on the page and listed in the letter as supporting evidence.
+When the adjusted analysis is unavailable (fewer than 5 comparables), the
+average of these medians is used instead.

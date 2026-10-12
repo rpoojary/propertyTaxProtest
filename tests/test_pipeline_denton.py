@@ -34,4 +34,5 @@ def test_other_property(rows):
 
 def test_canonical_detail(denton_db):
     main = read_rows(denton_db, "improvement")["247593"]
-    assert (main["condition"], main["eff_year_built"], main["quality"]) == ("Good", 2010, "1750S1,GB2")
+    # quality is the dwelling class picked from "1750S1,GB2"
+    assert (main["condition"], main["eff_year_built"], main["quality"]) == ("Good", 2010, "GB2")

@@ -1,9 +1,9 @@
 """JSON API. Owner names are not stored in the app DB and never returned."""
 import os
 
-from flask import Blueprint, abort, current_app, g, jsonify, request
+from flask import Blueprint, Response, abort, current_app, g, jsonify, request
 
-from app import comps
+from app import comps, equity, letter
 from app.config import public_view
 from app.db import connect_ro
 
@@ -63,3 +63,31 @@ def comparables(county, account):
     if subject is None:
         abort(404, description="property not found")
     return jsonify(comps.find_comps(db, subject, cfg["tax_year"]))
+
+
+@bp.get("/<county>/equity/<account>")
+def equity_analysis(county, account):
+    _, db = county_db(county)
+    subject = comps.get_property(db, account)
+    if subject is None:
+        abort(404, description="property not found")
+    return jsonify(equity.analyze(db, subject))
+
+
+@bp.post("/<county>/letter/<account>")
+def protest_letter(county, account):
+    """PDF protest letter. Body: {owner_name, conditions: [str], repairs: [{desc, cost}]}."""
+    cfg, db = county_db(county)
+    subject = comps.get_property(db, account)
+    if subject is None:
+        abort(404, description="property not found")
+    owner = letter.clean_owner_input(request.get_json(silent=True) or {})
+    try:
+        content = letter.build(cfg, subject, equity.analyze(db, subject),
+                               comps.find_comps(db, subject, cfg["tax_year"]), owner)
+    except letter.NoReduction as exc:
+        return jsonify({"error": f"No protest letter: {exc}."}), 422
+    pdf = letter.render_pdf(content)
+    name = "".join(ch for ch in account if ch.isalnum() or ch in "-_")
+    return Response(pdf, mimetype="application/pdf",
+                    headers={"Content-Disposition": f'attachment; filename="Property_Tax_Protest_{name}.pdf"'})

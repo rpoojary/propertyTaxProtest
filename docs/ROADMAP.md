@@ -90,12 +90,30 @@ only ship as a file geodatabase). Lat/lon is stored and shown as a map link;
 radius-based comps are left for Phase 4. Tarrant has no beds/baths and only
 owner-occupied homes get a ZIP (72%); its market area stands in for the
 neighborhood code.
-### Phase 4 — Equity comp engine (§42.26(a)(3) adjusted median, adjustment grid) + server-side PDF, prefilled Comptroller Form 50-132, §41.461 evidence-request reminder
+### Phase 4 — Equity comp engine + PDF letter — DONE 2026-10-12 (except Form 50-132)
+- `app/equity.py`: comparables by distance from the parcel centroid (0.5 →
+  1 → 2 → 3 mi, neighborhood fallback), same property category and, where
+  published, quality grade and condition; living area ±20%, (effective) year
+  built ±10. Up to 15, ranked by same neighborhood, distance, size, age.
+  Adjustment grid: size at the comparable's improvement $/sq ft, age at 0.5%
+  of improvement value per year, land by land-value difference. Median of
+  adjusted values = §42.26(a)(3) indicated value.
+- On a random 300 homes per county: 97–99% get an analysis; about half are
+  above their adjusted median. Typical gap: Dallas 2.3%, Collin 1.5%,
+  Denton 2.6%, Tarrant 11% (TAD values vary more within its coarse grades).
+- `app/letter.py`: PDF letter built server-side from the analysis
+  (`POST /api/<county>/letter/<account>`); refuses (422) when the data does
+  not support a reduction. Opinion of value = adjusted median − owner repair
+  costs, falling back to the comparison-set medians when no analysis.
+- Page: adjusted-comparables card, PDF download, filing deadline (§41.44) and
+  evidence-request (§41.461) reminders.
+- Form 50-132 prefill is NOT done: every copy of the form is on hosts this
+  environment cannot reach (comptroller.texas.gov). Needs that domain allowed.
 ### Phase 5 — Public launch: property pages, county guides, Cloudflare, analytics, ads
 
 ## Known issues in current code
-- Comp medians are unadjusted; §42.26(a)(3) calls for appropriately adjusted
-  comparables (Phase 4).
+- Bedrooms/baths, pools and other structures are not adjusted in the equity
+  grid; district values are driven mainly by living area, which is.
 - Collin lot size is only published for ~30% of homes.
 - Tarrant market areas are broader than Dallas/Collin neighborhoods, so the
   unadjusted neighborhood set can mix very different homes.

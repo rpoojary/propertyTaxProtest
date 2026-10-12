@@ -60,3 +60,21 @@ def test_property_location(client):
     assert p["lat"] == pytest.approx(32.89, abs=1e-5)
     assert p["lon"] == pytest.approx(-96.94, abs=1e-5)
     assert client.get("/api/dallas/property/C0001").get_json()["lat"] is None
+
+
+def test_equity_endpoint(client):
+    data = client.get("/api/dallas/equity/S0001").get_json()
+    assert "available" in data and "params" in data
+
+
+def test_letter_pdf(client):
+    body = {"owner_name": "Pat Tester", "repairs": [{"desc": "Roof", "cost": 1000}]}
+    r = client.post("/api/dallas/letter/S0001", json=body)
+    assert r.status_code == 200 and r.mimetype == "application/pdf"
+    assert r.data.startswith(b"%PDF")
+    assert "attachment" in r.headers["Content-Disposition"]
+
+
+def test_letter_refused_without_reduction(client):
+    r = client.post("/api/dallas/letter/C0001", json={})  # cheapest comparable: nothing to reduce
+    assert r.status_code == 422 and "No protest letter" in r.get_json()["error"]
