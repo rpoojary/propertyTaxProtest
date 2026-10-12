@@ -29,17 +29,20 @@
 Download each county's bulk export, inspect layouts, document fields in
 `docs/data-sources.md`. Raw files go in `data/` (gitignored, never committed).
 
-| County | Source (verify) | Notes |
+Status (2026-10-12): Dallas, Collin, Tarrant downloaded and documented in
+`docs/data-sources.md`; fetch with `python scripts/fetch_data.py`.
+
+| County | Source (verified) | Notes |
 |---|---|---|
-| Dallas | https://dallascad.org/DataProducts.aspx , GIS: https://dallascad.org/GISDataProducts.aspx | Certified CSV tables (current code's format). Parcels now `PARCEL_GEOM.zip`. |
-| Collin | data.gov "Collin CAD Appraisal Data - 2025" / "- Preliminary" (CSV hosted on data.austintexas.gov per search — verify) | Likely source of current Collin CSV. No license stated. |
-| Tarrant | https://www6.tad.org/resources/data-downloads | "Property Data – Full Set" + Supplemental, Res Comp Attribute, Median Ratios. Layout PDF found is 2022. |
-| Denton | https://www.dentoncad.com | No bulk download page found yet — check site or file an open-records request. |
+| Dallas | olp.dallascad.org/DataProducts.aspx; files via `www.dallascad.org/ViewPDFs.aspx` | Certified CSV tables + ARB outcomes + `PARCEL_GEOM.zip`. |
+| Collin | link.collincad.org public shares (linked from collincad.org) | Nightly CSVs; `CCAD-Appraisal-Data.csv` has beds/baths. |
+| Tarrant | www.tad.org/resources/data-downloads | Pipe-delimited roll, comp attributes (quality/condition/equity value), parcels. No beds/baths. |
+| Denton | denton.prodigycad.com/data-downloads, dentoncad.net | **Blocked** by network policy; needs domains below. |
 
 Cloud sessions need these domains allowed in the environment's network
 settings: `dallascad.org`, `*.dallascad.org`, `tad.org`, `*.tad.org`,
-`dentoncad.com`, `*.dentoncad.com`, `collincad.org`, `*.collincad.org`,
-`catalog.data.gov`, `data.austintexas.gov`.
+`collincad.org`, `*.collincad.org`, `dentoncad.com`, `*.dentoncad.com`,
+`dentoncad.net`, `*.dentoncad.net`, `*.prodigycad.com`, `*.trueprodigyapi.com`.
 
 ### Phase 1 — Foundation (~1 day)
 1. Restructure repo: `app/` (main.py, db.py, routes/, static/, wsgi.py),
