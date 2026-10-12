@@ -1,0 +1,16 @@
+[project]
+name = "propertytaxprotest"
+version = "0.1.0"
+description = "Free self-help tool for Texas property tax protests (unequal appraisal)."
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["data"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

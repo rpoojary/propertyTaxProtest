@@ -25,7 +25,7 @@
 - SEO: one page per property (`/tx/<county>/<address-slug>`) + county guides.
 
 ## Phases
-### Phase 0 — Get the data (CURRENT)
+### Phase 0 — Get the data — DONE
 Download each county's bulk export, inspect layouts, document fields in
 `docs/data-sources.md`. Raw files go in `data/` (gitignored, never committed).
 
@@ -45,7 +45,13 @@ settings: `dallascad.org`, `*.dallascad.org`, `tad.org`, `*.tad.org`,
 `dentoncad.net`, `*.dentoncad.net`, `*.prodigycad.com`, `*.trueprodigyapi.com`,
 `cdn.builder.io` (only to render Denton's index page).
 
-### Phase 1 — Foundation (~1 day)
+### Phase 1 — Foundation (~1 day) — DONE 2026-10-12
+All items below landed; see README for the new layout. Decisions: `TOTAL_EXEMPTION.CSV`
+removed from git (it ships inside the Dallas zip); GoDaddy files deleted (it was
+an experiment); app DB is one denormalized `property` table (Phase 2 replaces it
+with the canonical schema); the test fixture is synthetic CSVs run through the
+real adapter, not a committed `.db`.
+
 1. Restructure repo: `app/` (main.py, db.py, routes/, static/, wsgi.py),
    `counties/` (config.yaml + per-county adapter dirs), `pipeline/build_db.py`,
    `scripts/query_comps.py` (takes args), `data/` (gitignored), `tests/`.
@@ -62,13 +68,14 @@ settings: `dallascad.org`, `*.dallascad.org`, `tad.org`, `*.tad.org`,
    GitHub Actions CI, `.gitignore`.
 5. Rewrite README; mark DEPLOY_GODADDY.md stale.
 
-Open questions: keep `TOTAL_EXEMPTION.CSV` in git or move to `data/`?
-OK to rename `webapp/` → `app/` (breaks GoDaddy path)?
 
-### Phase 2 — Canonical schema + Dallas & Collin adapters (golden-file tests)
+### Phase 2 — Canonical schema + Dallas & Collin adapters (golden-file tests) (NEXT)
 ### Phase 3 — Denton & Tarrant adapters + GIS lat/lon
 ### Phase 4 — Equity comp engine (§42.26(a)(3) adjusted median, adjustment grid) + server-side PDF, prefilled Comptroller Form 50-132, §41.461 evidence-request reminder
 ### Phase 5 — Public launch: property pages, county guides, Cloudflare, analytics, ads
 
 ## Known issues in current code
-See Phase 1 list. Also: Collin importer sets beds/baths to 0 (breaks zip comps).
+- Comp medians are unadjusted; §42.26(a)(3) calls for appropriately adjusted
+  comparables (Phase 4).
+- Collin lot size is only published for ~30% of homes.
+- Tarrant and Denton have no app DB adapter yet (Phase 3).

@@ -18,7 +18,7 @@ import sys
 import time
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -113,7 +113,7 @@ def fetch(url, dest):
         raise RuntimeError(f"short read: {done} of {total} bytes")
     os.replace(tmp, dest)
     return {"url": url, "bytes": done, "sha256": h.hexdigest(),
-            "content_type": ctype, "fetched_at": datetime.now(timezone.utc).isoformat()}
+            "content_type": ctype, "fetched_at": datetime.now(UTC).isoformat()}
 
 
 def main(argv):

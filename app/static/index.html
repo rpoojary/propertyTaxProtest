@@ -51,18 +51,20 @@ tr:hover { background: #f8fafc; }
 <body>
 <div class="header">
   <h1>🏠 Property Tax Protest Helper</h1>
-  <p>Find comparable sales, document property issues, and build your protest case</p>
+  <p>Compare your appraised value with similar properties and draft your own protest</p>
 </div>
 <div class="container">
   <div class="search-box">
-    <label>Search your property</label>
+    <label for="countySelect">County</label>
+    <select id="countySelect" style="width:100%;padding:10px;font-size:15px;border:2px solid #ddd;border-radius:8px;margin-bottom:12px"></select>
+    <label for="searchInput">Search your property</label>
     <input type="text" id="searchInput" placeholder="Enter address (e.g. 404 Vine St) or account number" autocomplete="off">
     <div class="search-hint">Type at least 3 characters to search</div>
     <div class="results" id="searchResults"></div>
   </div>
   <div class="loading" id="loading" style="text-align:center;padding:40px;color:#999;display:none">
     <div style="display:inline-block;width:30px;height:30px;border:3px solid #ddd;border-top-color:#2563eb;border-radius:50%;animation:spin 0.8s linear infinite"></div>
-    <p style="margin-top:12px">Finding your property and comps...</p>
+    <p style="margin-top:12px">Finding your property and comparable properties...</p>
   </div>
   <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
 
@@ -81,7 +83,7 @@ tr:hover { background: #f8fafc; }
       <div class="prop-item"><div class="label">Lot SqFt</div><div class="value" id="propLot">—</div></div>
       <div class="prop-item"><div class="label">Year Built</div><div class="value" id="propYear">—</div></div>
       <div class="prop-item"><div class="label">$/SqFt</div><div class="value" id="propPpsf">—</div></div>
-      <div class="prop-item"><div class="label">Last Sold</div><div class="value" id="propSold" style="font-size:15px">—</div></div>
+      <div class="prop-item"><div class="label">Deed Date</div><div class="value" id="propSold" style="font-size:15px">—</div></div>
     </div>
   </div>
 
@@ -173,28 +175,28 @@ tr:hover { background: #f8fafc; }
 
   <!-- Neighborhood Comps -->
   <div class="card" id="nbhdCard">
-    <h2>📍 Neighborhood Comps — Sold Last 12 Months</h2>
+    <h2>📍 Neighborhood — Recently Sold Properties (Appraised Value)</h2>
     <p id="nbhdLabel" style="color:#777;font-size:13px;margin-bottom:10px"></p>
     <div class="stats-row" id="nbhdStats"></div>
     <div style="max-height:350px;overflow-y:auto">
-      <table><thead><tr><th>Address</th><th>Sold</th><th>Appraised</th><th>Bed</th><th>Bath</th><th>SqFt</th><th>Lot</th><th>Year</th><th>$/SF</th></tr></thead><tbody id="nbhdTable"></tbody></table>
+      <table><thead><tr><th>Address</th><th>Deed Date</th><th>Appraised</th><th>Bed</th><th>Bath</th><th>SqFt</th><th>Lot</th><th>Year</th><th>$/SF</th></tr></thead><tbody id="nbhdTable"></tbody></table>
     </div>
   </div>
 
   <!-- Zip Comps -->
   <div class="card" id="zipCard">
-    <h2>📊 ZIP Code Comps — Similar Specs, Sold Last 12 Months</h2>
+    <h2>📊 ZIP Code — Similar Recently Sold Properties (Appraised Value)</h2>
     <p id="zipLabel" style="color:#777;font-size:13px;margin-bottom:10px"></p>
     <div class="stats-row" id="zipStats"></div>
     <div style="max-height:400px;overflow-y:auto">
-      <table><thead><tr><th>Address</th><th>Sold</th><th>Appraised</th><th>Bed</th><th>Bath</th><th>SqFt</th><th>Lot</th><th>Year</th><th>$/SF</th></tr></thead><tbody id="zipTable"></tbody></table>
+      <table><thead><tr><th>Address</th><th>Deed Date</th><th>Appraised</th><th>Bed</th><th>Bath</th><th>SqFt</th><th>Lot</th><th>Year</th><th>$/SF</th></tr></thead><tbody id="zipTable"></tbody></table>
     </div>
   </div>
 
   <!-- Protest Recommendation -->
   <div class="protest-box" id="protestBox">
     <h3>⚖️ Protest Recommendation</h3>
-    <p>Based on comparable sales analysis and your property disclosures:</p>
+    <p>Based on the appraised values of comparable properties and the repair costs you entered:</p>
     <div class="protest-val" id="protestValue">—</div>
     <div class="protest-savings" id="protestSavings">—</div>
     <div class="protest-breakdown" id="protestBreakdown"></div>
@@ -202,6 +204,10 @@ tr:hover { background: #f8fafc; }
     <div id="protestDisclosures" style="margin-top:12px;font-size:13px;display:none">
       <strong style="color:#92400e">Documented Property Issues:</strong>
       <ul id="protestDiscList" style="margin:6px 0 0 18px;color:#555"></ul>
+    </div>
+    <div style="margin-top:16px">
+      <label for="ownerName" style="font-size:13px;color:#555">Your name (printed on the letter; not stored or sent anywhere)</label>
+      <input type="text" id="ownerName" autocomplete="name" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin-top:4px">
     </div>
     <div style="margin-top:20px;text-align:center">
       <button onclick="downloadProtest()" style="padding:14px 32px;background:linear-gradient(135deg,#059669,#047857);color:white;border:none;border-radius:8px;cursor:pointer;font-size:16px;font-weight:700;box-shadow:0 4px 12px rgba(5,150,105,0.3);transition:transform 0.15s">📄 Draft Protest Document — Download</button>
@@ -218,8 +224,9 @@ tr:hover { background: #f8fafc; }
 </div>
 
 <div class="footer" style="text-align:center;padding:30px;color:#999;font-size:13px">
-  Data source: Local Appraisal District Certified Values<br>
-  This tool is for informational purposes only. Not legal or tax advice.
+  <span id="dataSource">Data source: county appraisal district rolls.</span><br>
+  Values shown are <strong>appraised values</strong>, not sale prices; Texas does not publish sale prices.<br>
+  This is a free self-help tool. You file your own protest. Not legal or appraisal advice.
 </div>
 
 <style>
@@ -243,48 +250,84 @@ tr:hover { background: #f8fafc; }
 <script>
 const $ = id => document.getElementById(id);
 const fmt = n => '$' + Math.round(n).toLocaleString();
+// Escape any DB- or user-supplied text before it goes into HTML.
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+const bathStr = (full, half) => full == null ? '—' : (half ? full + 'F/' + half + 'H' : String(full));
+const addrOf = p => p.street_num + ' ' + p.street_name;
 let debounce;
+let _counties = {};
+let _county = null;
 let _compsData = null;
 let _baseMedian = 0;
+
+// Counties
+fetch('/api/counties').then(r => r.json()).then(list => {
+  const sel = $('countySelect');
+  list.forEach(c => {
+    _counties[c.id] = c;
+    const o = document.createElement('option');
+    o.value = c.id;
+    o.textContent = c.name + (c.available ? '' : ' (coming soon)');
+    o.disabled = !c.available;
+    sel.appendChild(o);
+  });
+  const first = list.find(c => c.available);
+  if (first) { sel.value = first.id; setCounty(first.id); }
+});
+$('countySelect').addEventListener('change', function() { setCounty(this.value); });
+
+function setCounty(id) {
+  _county = _counties[id];
+  $('dataSource').textContent = 'Data source: ' + _county.cad_name + ', ' + _county.tax_year + ' appraisal roll.';
+  $('searchInput').value = '';
+  $('searchResults').style.display = 'none';
+  $('searchResults').innerHTML = '';
+  ['propertyCard','nbhdCard','zipCard','allCard','protestBox','disclosureCard'].forEach(id => $(id).style.display = 'none');
+}
+
+function api(path) {
+  return fetch('/api/' + encodeURIComponent(_county.id) + path).then(r => r.json());
+}
 
 // Search
 $('searchInput').addEventListener('input', function() {
   clearTimeout(debounce);
   const q = this.value.trim();
-  if (q.length < 3) { $('searchResults').style.display = 'none'; return; }
+  if (q.length < 3 || !_county) { $('searchResults').style.display = 'none'; return; }
   debounce = setTimeout(() => {
-    fetch('/api/search?q=' + encodeURIComponent(q))
-      .then(r => r.json())
-      .then(data => {
-        const el = $('searchResults');
-        if (!data.length) { el.style.display = 'none'; return; }
-        el.innerHTML = data.map(r => {
-          const v = parseFloat(r.TOT_VAL) || 0;
-          return '<div class="item" onclick="selectProperty(\'' + r.ACCOUNT_NUM + '\')">' +
-            '<div class="addr">' + r.STREET_NUM + ' ' + r.FULL_STREET_NAME + ', ' + r.PROPERTY_CITY + ' ' + r.ZIP + '</div>' +
-            '<div class="detail">' + fmt(v) + ' · ' + (r.NUM_BEDROOMS||'?') + 'bd/' + (r.NUM_FULL_BATHS||'?') + 'ba · ' + (r.TOT_LIVING_AREA_SF||'?') + ' sqft · Built ' + (r.YR_BUILT||'?') + '</div>' +
-          '</div>';
-        }).join('');
-        el.style.display = 'block';
-      });
+    api('/search?q=' + encodeURIComponent(q)).then(data => {
+      const el = $('searchResults');
+      if (!data.length) { el.style.display = 'none'; return; }
+      el.innerHTML = data.map(r =>
+        '<div class="item" data-account="' + esc(r.account) + '">' +
+          '<div class="addr">' + esc(addrOf(r) + ', ' + r.city + ' ' + r.zip) + '</div>' +
+          '<div class="detail">' + fmt(num(r.appraised_val)) + ' · ' + esc(r.beds ?? '?') + 'bd/' +
+            esc(bathStr(r.full_baths, r.half_baths)) + 'ba · ' + esc(r.living_sqft ?? '?') + ' sqft · Built ' + esc(r.year_built ?? '?') + '</div>' +
+        '</div>').join('');
+      el.style.display = 'block';
+    });
   }, 300);
+});
+$('searchResults').addEventListener('click', function(e) {
+  const item = e.target.closest('.item');
+  if (item) selectProperty(item.dataset.account);
 });
 
 function selectProperty(account) {
   $('searchResults').style.display = 'none';
+  $('searchResults').innerHTML = '';
   ['propertyCard','nbhdCard','zipCard','allCard','protestBox','disclosureCard'].forEach(id => $(id).style.display = 'none');
   $('loading').style.display = 'block';
-  // Reset disclosures
   document.querySelectorAll('.disc-check').forEach(cb => cb.checked = false);
   $('discOther').value = '';
   $('repairList').innerHTML = '';
   $('totalRepairs').textContent = '$0';
 
-  Promise.all([
-    fetch('/api/property/' + account).then(r => r.json()),
-    fetch('/api/comps/' + account).then(r => r.json())
-  ]).then(([prop, comps]) => {
+  const acct = '/' + encodeURIComponent(account);
+  Promise.all([api('/property' + acct), api('/comps' + acct)]).then(([prop, comps]) => {
     $('loading').style.display = 'none';
+    if (prop.error || comps.error) { alert(prop.error || comps.error); return; }
     _compsData = comps;
     renderProperty(prop);
     renderComps(prop, comps);
@@ -293,53 +336,64 @@ function selectProperty(account) {
 }
 
 function renderProperty(p) {
-  const val = parseFloat(p.TOT_VAL);
-  const sqft = parseFloat(p.TOT_LIVING_AREA_SF) || 0;
-  const fb = parseInt(p.NUM_FULL_BATHS) || 0;
-  const hb = parseInt(p.NUM_HALF_BATHS) || 0;
-  const bath = hb > 0 ? fb + 'F/' + hb + 'H' : String(fb);
-  $('propAddress').textContent = p.STREET_NUM + ' ' + p.FULL_STREET_NAME + ', ' + p.PROPERTY_CITY + ' ' + p.ZIP;
-  $('searchInput').value = p.STREET_NUM + ' ' + p.FULL_STREET_NAME;
-  $('propAccount').textContent = p.ACCOUNT_NUM;
+  const val = num(p.appraised_val);
+  const sqft = num(p.living_sqft);
+  $('propAddress').textContent = addrOf(p) + ', ' + p.city + ' ' + p.zip;
+  $('searchInput').value = addrOf(p);
+  $('propAccount').textContent = p.account;
   $('propValue').textContent = fmt(val);
-  $('propBeds').textContent = p.NUM_BEDROOMS || '—';
-  $('propBaths').textContent = bath;
+  $('propBeds').textContent = p.beds ?? '—';
+  $('propBaths').textContent = bathStr(p.full_baths, p.half_baths);
   $('propSqft').textContent = sqft ? sqft.toLocaleString() : '—';
-  $('propLot').textContent = p.AREA_SIZE ? parseInt(p.AREA_SIZE).toLocaleString() : '—';
-  $('propYear').textContent = p.YR_BUILT || '—';
+  $('propLot').textContent = p.lot_sqft ? Math.round(p.lot_sqft).toLocaleString() : '—';
+  $('propYear').textContent = p.year_built || '—';
   $('propPpsf').textContent = sqft > 0 ? fmt(val / sqft) : '—';
-  $('propSold').textContent = p.DEED_TXFR_DATE || '—';
+  $('propSold').textContent = p.deed_date || '—';
   const hs = $('propHomestead');
-  if (p.HOMESTEAD) { hs.textContent = 'Yes ✓'; hs.className = 'badge yes'; }
+  if (p.homestead) { hs.textContent = 'Yes ✓'; hs.className = 'badge yes'; }
   else { hs.textContent = 'No'; hs.className = 'badge no'; }
   $('propertyCard').style.display = 'block';
   window._prop = p;
 }
 
+// Plain-language description of a comparison set's criteria (shared with protest.js).
+function describeCriteria(c) {
+  const parts = [];
+  if (c.nbhd) parts.push('neighborhood code ' + c.nbhd);
+  if (c.zip) parts.push('ZIP ' + c.zip);
+  if (c.beds != null) parts.push(c.beds + ' bedrooms');
+  if (c.min_full_baths != null) parts.push('at least ' + c.min_full_baths + ' full baths');
+  if (c.full_baths != null) parts.push(c.full_baths + ' full / ' + c.half_baths + ' half baths');
+  if (c.sqft_low != null) parts.push(c.sqft_low.toLocaleString() + '–' + c.sqft_high.toLocaleString() + ' sq ft living area');
+  if (c.deed_since) parts.push('deed recorded on or after ' + c.deed_since);
+  return parts.join(', ');
+}
+
 function renderComps(prop, comps) {
-  const propVal = parseFloat(prop.TOT_VAL);
-  renderTable('nbhdTable', comps.neighborhood_comps);
-  renderStats('nbhdStats', comps.neighborhood_stats, propVal);
-  $('nbhdLabel').textContent = 'Neighborhood: ' + prop.NBHD_CD + ' · ' + comps.neighborhood_stats.count + ' sales found';
-  $('nbhdCard').style.display = comps.neighborhood_comps.length ? 'block' : 'none';
-  renderTable('zipTable', comps.zip_comps);
-  renderStats('zipStats', comps.zip_stats, propVal);
-  $('zipLabel').textContent = 'ZIP ' + prop.ZIP + ' · ' + comps.zip_stats.count + ' similar sales found';
-  $('zipCard').style.display = comps.zip_comps.length ? 'block' : 'none';
-  renderStats('allStats', comps.all_similar_stats, propVal);
-  $('allLabel').textContent = comps.all_similar_stats.count + ' properties with matching specs in ZIP ' + prop.ZIP;
-  $('allCard').style.display = comps.all_similar_stats.count ? 'block' : 'none';
+  const propVal = num(prop.appraised_val);
+  const n = comps.neighborhood, z = comps.zip, a = comps.all_similar;
+  renderTable('nbhdTable', n.comps);
+  renderStats('nbhdStats', n.stats, propVal);
+  $('nbhdLabel').textContent = n.stats.count + ' properties: ' + describeCriteria(n.criteria) + (n.truncated ? ' (table shows the first ' + n.comps.length + ')' : '');
+  $('nbhdCard').style.display = n.comps.length ? 'block' : 'none';
+  renderTable('zipTable', z.comps);
+  renderStats('zipStats', z.stats, propVal);
+  $('zipLabel').textContent = z.stats.count + ' properties: ' + describeCriteria(z.criteria) + (z.truncated ? ' (table shows the first ' + z.comps.length + ')' : '');
+  $('zipCard').style.display = z.comps.length ? 'block' : 'none';
+  renderStats('allStats', a.stats, propVal);
+  $('allLabel').textContent = a.stats.count + ' properties on the current roll: ' + describeCriteria(a.criteria);
+  $('allCard').style.display = a.stats.count ? 'block' : 'none';
   updateProtest();
 }
 
 function renderTable(id, rows) {
   $(id).innerHTML = rows.map(r => {
-    const v = parseFloat(r.TOT_VAL);
-    const sf = parseFloat(r.TOT_LIVING_AREA_SF) || 0;
-    const fb = parseInt(r.NUM_FULL_BATHS) || 0;
-    const hb = parseInt(r.NUM_HALF_BATHS) || 0;
-    const bath = hb > 0 ? fb + '/' + hb : String(fb);
-    return '<tr><td>' + (r.ADDRESS||'—') + '</td><td>' + (r.DEED_TXFR_DATE||'—') + '</td><td>' + fmt(v) + '</td><td>' + (r.NUM_BEDROOMS||'—') + '</td><td>' + bath + '</td><td>' + (sf?sf.toLocaleString():'—') + '</td><td>' + (r.AREA_SIZE?parseInt(r.AREA_SIZE).toLocaleString():'—') + '</td><td>' + (r.YR_BUILT||'—') + '</td><td>' + (sf>0?fmt(v/sf):'—') + '</td></tr>';
+    const v = num(r.appraised_val);
+    const sf = num(r.living_sqft);
+    return '<tr><td>' + esc(r.address || '—') + '</td><td>' + esc(r.deed_date || '—') + '</td><td>' + fmt(v) +
+      '</td><td>' + esc(r.beds ?? '—') + '</td><td>' + esc(bathStr(r.full_baths, r.half_baths)) +
+      '</td><td>' + (sf ? sf.toLocaleString() : '—') + '</td><td>' + (r.lot_sqft ? Math.round(r.lot_sqft).toLocaleString() : '—') +
+      '</td><td>' + esc(r.year_built || '—') + '</td><td>' + (sf > 0 ? fmt(v / sf) : '—') + '</td></tr>';
   }).join('');
 }
 
@@ -350,8 +404,8 @@ function renderStats(id, stats, propVal) {
   const sign = diff > 0 ? '+' : '';
   $(id).innerHTML =
     '<div class="stat"><div class="label">Count</div><div class="val">' + stats.count + '</div></div>' +
-    '<div class="stat"><div class="label">Median</div><div class="val">' + fmt(stats.median) + '</div></div>' +
-    '<div class="stat"><div class="label">Average</div><div class="val">' + fmt(stats.average) + '</div></div>' +
+    '<div class="stat"><div class="label">Median Appraised</div><div class="val">' + fmt(stats.median) + '</div></div>' +
+    '<div class="stat"><div class="label">Average Appraised</div><div class="val">' + fmt(stats.average) + '</div></div>' +
     '<div class="stat"><div class="label">You vs Median</div><div class="val" style="' + diffClass + '">' + sign + fmt(diff) + '</div></div>';
 }
 
@@ -361,18 +415,24 @@ function addRepairRow() {
   div.className = 'repair-row';
   div.innerHTML = '<input type="text" placeholder="Description (e.g. Roof replacement)" class="repair-desc">' +
     '<input type="number" placeholder="Cost ($)" class="repair-cost" min="0" step="100">' +
-    '<button onclick="this.parentElement.remove();updateProtest()">✕</button>';
+    '<button type="button">✕</button>';
+  div.querySelector('button').addEventListener('click', () => { div.remove(); updateProtest(); });
   div.querySelector('.repair-cost').addEventListener('input', updateProtest);
+  div.querySelector('.repair-desc').addEventListener('input', updateProtest);
   $('repairList').appendChild(div);
 }
 
-function getTotalRepairs() {
-  let total = 0;
-  document.querySelectorAll('.repair-cost').forEach(el => {
-    const v = parseFloat(el.value);
-    if (v > 0) total += v;
+function getRepairItems() {
+  const items = [];
+  document.querySelectorAll('.repair-row').forEach(row => {
+    const cost = parseFloat(row.querySelector('.repair-cost').value);
+    if (cost > 0) items.push({desc: row.querySelector('.repair-desc').value.trim() || 'Repair', cost: cost});
   });
-  return total;
+  return items;
+}
+
+function getTotalRepairs() {
+  return getRepairItems().reduce((t, i) => t + i.cost, 0);
 }
 
 function getDisclosures() {
@@ -383,46 +443,48 @@ function getDisclosures() {
   return items;
 }
 
+function compSets() {
+  const c = _compsData;
+  return [
+    {key: 'neighborhood', label: 'Neighborhood, recently sold', set: c.neighborhood},
+    {key: 'zip', label: 'ZIP, similar & recently sold', set: c.zip},
+    {key: 'all_similar', label: 'ZIP, all similar on roll', set: c.all_similar},
+  ].filter(s => s.set.stats.count > 0);
+}
+
 function updateProtest() {
   if (!_compsData || !window._prop) return;
-  const propVal = parseFloat(window._prop.TOT_VAL);
-  const comps = _compsData;
+  const propVal = num(window._prop.appraised_val);
   const repairs = getTotalRepairs();
   const disclosures = getDisclosures();
 
   $('totalRepairs').textContent = fmt(repairs);
 
-  const medians = [comps.neighborhood_stats, comps.zip_stats, comps.all_similar_stats]
-    .filter(s => s.count > 0).map(s => s.median);
-  if (medians.length === 0) { $('protestBox').style.display = 'none'; return; }
+  const sets = compSets();
+  if (sets.length === 0) { $('protestBox').style.display = 'none'; return; }
 
-  const avgMedian = medians.reduce((a, b) => a + b, 0) / medians.length;
+  const avgMedian = sets.reduce((a, s) => a + s.set.stats.median, 0) / sets.length;
   _baseMedian = Math.round(avgMedian / 1000) * 1000;
   const recommended = _baseMedian - repairs;
   const savings = propVal - recommended;
 
-  if (savings <= 0 && repairs === 0) { $('protestBox').style.display = 'none'; return; }
+  if (savings <= 0) { $('protestBox').style.display = 'none'; return; }
 
   $('protestValue').textContent = fmt(recommended);
-  $('protestSavings').textContent = 'Potential reduction: ' + fmt(savings > 0 ? savings : 0);
+  $('protestSavings').textContent = 'Potential reduction: ' + fmt(savings);
 
-  // Breakdown
-  let bk = '<div class="line"><span>Comp median (avg of ' + medians.length + ' sets)</span><span>' + fmt(_baseMedian) + '</span></div>';
-  if (repairs > 0) {
-    document.querySelectorAll('.repair-row').forEach(row => {
-      const desc = row.querySelector('.repair-desc').value || 'Repair';
-      const cost = parseFloat(row.querySelector('.repair-cost').value) || 0;
-      if (cost > 0) bk += '<div class="line"><span>− ' + desc + '</span><span style="color:#dc2626">-' + fmt(cost) + '</span></div>';
-    });
-  }
-  bk += '<div class="line total"><span>Recommended protest value</span><span>' + fmt(recommended) + '</span></div>';
+  let bk = '<div class="line"><span>Average of ' + sets.length + ' median appraised values</span><span>' + fmt(_baseMedian) + '</span></div>';
+  getRepairItems().forEach(item => {
+    bk += '<div class="line"><span>− ' + esc(item.desc) + '</span><span style="color:#dc2626">-' + fmt(item.cost) + '</span></div>';
+  });
+  bk += '<div class="line total"><span>Suggested opinion of value</span><span>' + fmt(recommended) + '</span></div>';
   $('protestBreakdown').innerHTML = bk;
 
-  $('protestExplain').textContent = 'Use this as your opinion of value when filing with your Appraisal District.' + (repairs > 0 ? ' Attach repair estimates as supporting documentation.' : '');
+  $('protestExplain').textContent = 'You can use this as your opinion of value when filing with ' + _county.cad_name + '.' +
+    (repairs > 0 ? ' Attach your repair estimates as supporting documentation.' : '');
 
-  // Disclosures list
   if (disclosures.length > 0) {
-    $('protestDiscList').innerHTML = disclosures.map(d => '<li>' + d + '</li>').join('');
+    $('protestDiscList').innerHTML = disclosures.map(d => '<li>' + esc(d) + '</li>').join('');
     $('protestDisclosures').style.display = 'block';
   } else {
     $('protestDisclosures').style.display = 'none';
@@ -431,7 +493,6 @@ function updateProtest() {
   $('protestBox').style.display = 'block';
 }
 
-// Listen for disclosure changes
 document.addEventListener('change', function(e) {
   if (e.target.classList.contains('disc-check')) updateProtest();
 });

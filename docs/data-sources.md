@@ -21,7 +21,7 @@ US feet); Denton's geodatabase projection is not yet checked. Reproject to WGS84
 | Appraised value | ✅ | ✅ | ✅ | ✅ |
 | Living area / year built | ✅ | ✅ | ✅ | ✅ |
 | Bedrooms / baths | ✅ | ✅ 84% / 88% of res. (`CCAD-Appraisal-Data.csv` only) | ❌ not published | ✅ in improvement attributes (full export only) |
-| Land size | ✅ | ✅ | ✅ | ✅ |
+| Land size | ✅ | ⚠️ ~30% of homes (rest published as `.00`) | ✅ | ✅ |
 | Quality / condition | CDU rating, bldg class | class code | ✅ comp attribute file | class code, condition (partial) |
 | Neighborhood code | ✅ | ✅ + nbhd adj. % | market area | `hood_cd` (full export only) |
 | Deed / transfer date | ✅ | ✅ | ✅ | ✅ |

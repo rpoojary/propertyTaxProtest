@@ -1,0 +1,54 @@
+# Per-county settings used by the pipeline (to build the app DB) and the web
+# app (county picker, protest letter). Paths are relative to the repo root.
+#
+#   tax_year     appraisal year of the roll the app DB is built from; the
+#                "recently transferred" filter covers deeds from tax_year - 1 on.
+#   date_format  strptime format of deed dates in the county's raw export.
+#   adapter      module under counties/ that builds the app DB (null = none yet).
+
+dallas:
+  name: Dallas County
+  cad_name: Dallas Central Appraisal District
+  cad_abbrev: DCAD
+  cad_address: 2949 North Stemmons Freeway, Dallas, TX 75247
+  protest_url: https://www.dallascad.org/
+  tax_year: 2026
+  date_format: "%m/%d/%Y"
+  adapter: dallas
+  source: data/dallas/raw/DCAD2026_CURRENT.zip
+  db: data/dallas/app.db
+
+collin:
+  name: Collin County
+  cad_name: Collin Central Appraisal District
+  cad_abbrev: CCAD
+  cad_address: 250 Eldorado Pkwy, McKinney, TX 75069
+  protest_url: https://collincad.org/
+  tax_year: 2026
+  date_format: "%Y-%m-%d"
+  adapter: collin
+  source: data/collin/raw/AppraisalData-Public-2026.csv
+  details: data/collin/raw/CCAD-Appraisal-Data.csv
+  db: data/collin/app.db
+
+tarrant:
+  name: Tarrant County
+  cad_name: Tarrant Appraisal District
+  cad_abbrev: TAD
+  cad_address: 2500 Handley-Ederville Road, Fort Worth, TX 76118
+  protest_url: https://www.tad.org/
+  tax_year: 2026
+  date_format: "%Y-%m-%d"
+  adapter: null
+  db: data/tarrant/app.db
+
+denton:
+  name: Denton County
+  cad_name: Denton Central Appraisal District
+  cad_abbrev: Denton CAD
+  cad_address: 3911 Morse Street, Denton, TX 76208
+  protest_url: https://denton.prodigycad.com/
+  tax_year: 2026
+  date_format: "%Y-%m-%d"
+  adapter: null
+  db: data/denton/app.db

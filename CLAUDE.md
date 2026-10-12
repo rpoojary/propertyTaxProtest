@@ -7,3 +7,4 @@ the phase plan, including which phase is current.
 - Never commit raw county data or built `.db` files.
 - Never put fabricated claims in the generated protest letter; every
   statement must come from computed data.
+- Check before pushing: `ruff check .` and `pytest -q`.
