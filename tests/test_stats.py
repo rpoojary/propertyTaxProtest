@@ -18,7 +18,7 @@ def test_to_float_and_int_are_safe():
     assert to_float("1,234.50") == 1234.5
     assert to_float(" $12 ") == 12.0
     assert to_float(".00") == 0.0
-    for junk in (None, "", "  ", "N/A", "abc"):
+    for junk in (None, "", "  ", "N/A", "abc", "inf", "INFINITY", "nan"):
         assert to_float(junk) is None
         assert to_int(junk) is None
     assert to_int("3.0") == 3

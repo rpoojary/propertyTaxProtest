@@ -20,7 +20,7 @@ from datetime import UTC, datetime
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.config import load_counties  # noqa: E402
-from app.db import COLUMNS, INDEXES, PARCEL_INDEX, SCHEMA  # noqa: E402
+from app.db import CANONICAL_TABLES, INDEXES, PARCEL_INDEX, SCHEMA, SUMMARY_SQL, columns  # noqa: E402
 from pipeline.geo import parcel_points  # noqa: E402
 
 csv.field_size_limit(10_000_000)
@@ -59,17 +59,31 @@ def open_table(source, name=None, delimiter=","):
     return csv.DictReader(open_text(source, name), delimiter=delimiter)
 
 
-def insert_properties(conn, rows):
-    sql = f"INSERT OR REPLACE INTO property ({','.join(COLUMNS)}) VALUES ({','.join('?' * len(COLUMNS))})"
-    batch, n = [], 0
-    for r in rows:
-        batch.append(tuple(r.get(c) for c in COLUMNS))
-        if len(batch) >= 50_000:
-            conn.executemany(sql, batch)
-            n += len(batch)
-            batch = []
-    conn.executemany(sql, batch)
-    return n + len(batch)
+class Writer:
+    """Buffered inserts into the canonical tables. Adapters call add(table, row)."""
+
+    BATCH = 50_000
+
+    def __init__(self, conn):
+        self.conn = conn
+        self.cols = {t: columns(t) for t in CANONICAL_TABLES}
+        self.buf = {t: [] for t in CANONICAL_TABLES}
+
+    def add(self, table, row):
+        unknown = set(row) - set(self.cols[table])
+        if unknown:
+            raise KeyError(f"{table} has no column(s) {sorted(unknown)}")
+        self.buf[table].append(tuple(row.get(c) for c in self.cols[table]))
+        if len(self.buf[table]) >= self.BATCH:
+            self.flush(table)
+
+    def flush(self, table=None):
+        for t in [table] if table else CANONICAL_TABLES:
+            if self.buf[t]:
+                cols = self.cols[t]
+                self.conn.executemany(
+                    f"INSERT OR REPLACE INTO {t} ({','.join(cols)}) VALUES ({','.join('?' * len(cols))})", self.buf[t])
+                self.buf[t] = []
 
 
 def add_locations(conn, parcels, key_column, log=print):
@@ -98,12 +112,16 @@ def build(cfg, output=None, source=None, log=print):
     conn = sqlite3.connect(tmp)
     conn.executescript(SCHEMA)
     adapter = importlib.import_module(f"counties.{cfg['adapter']}.adapter")
-    n = adapter.build(conn, cfg, log=log)
+    out = Writer(conn)
+    adapter.build(out, cfg, log=log)
+    out.flush()
     located = 0
     if cfg.get("parcels") and os.path.exists(cfg["parcels"]):
         located = add_locations(conn, cfg["parcels"], cfg["parcels_key"], log=log)
     elif cfg.get("parcels"):
         log(f"  {cfg['parcels']} not found; skipping lat/lon")
+    conn.execute(SUMMARY_SQL, {"tax_year": cfg["tax_year"]})
+    n = conn.execute("SELECT count(*) FROM property_summary").fetchone()[0]
     conn.executescript(INDEXES)
     meta = {
         "county": cfg["id"],
@@ -112,6 +130,7 @@ def build(cfg, output=None, source=None, log=print):
         "built_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "rows": str(n),
         "located": str(located),
+        **{f"{t}_rows": str(conn.execute(f"SELECT count(*) FROM {t}").fetchone()[0]) for t in CANONICAL_TABLES},
     }
     conn.executemany("INSERT INTO county_meta VALUES (?, ?)", meta.items())
     conn.commit()

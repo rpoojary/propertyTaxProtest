@@ -17,14 +17,16 @@ bedroom/bath counts, so its comparisons match on size only.
 
 ```
 app/                 Flask app: main.py (factory + dev server), wsgi.py,
-                     routes/api.py, comps.py (queries), stats.py, db.py, static/
+                     routes/api.py, comps.py (queries), stats.py, static/,
+                     db.py (DB schema: canonical tables + property_summary)
 counties/config.yaml per-county settings (CAD name/address, tax year, paths)
 counties/<county>/   adapter.py: raw export -> app DB
 pipeline/build_db.py build a county's app DB
 pipeline/geo.py      parcel shapefile centroids -> lat/lon (no GDAL needed)
 scripts/fetch_data.py      download raw county exports into data/
 scripts/query_comps.py     print a property's comparables from the command line
-tests/               pytest suite; fixtures/ holds synthetic Dallas-format CSVs
+tests/               pytest suite; fixtures/ holds synthetic county exports,
+                     golden/ the expected adapter output (golden files)
 data/                raw downloads and built DBs (gitignored, never committed)
 ```
 
@@ -65,6 +67,23 @@ ruff check .
 ```
 
 CI runs both on every push (`.github/workflows/ci.yml`).
+
+`tests/test_golden.py` compares each adapter's complete output on its fixture
+with `tests/golden/<county>.json`. After an intended adapter change,
+regenerate and review the diff:
+
+```bash
+UPDATE_GOLDEN=1 pytest tests/test_golden.py && git diff tests/golden
+```
+
+## Database
+
+Each county DB (`data/<county>/app.db`) has the same canonical tables:
+`property`, `valuation` (one row per tax year), `improvement` (main dwelling
+and other structures), `land`, `exemption`, `deed` (transfer dates; Texas
+publishes no sale prices) and `county_meta`. The web app reads
+`property_summary`, one row per property derived from those tables in
+`app/db.py`.
 
 ## How comparisons work (current, before Phase 4)
 

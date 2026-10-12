@@ -69,7 +69,18 @@ real adapter, not a committed `.db`.
 5. Rewrite README; mark DEPLOY_GODADDY.md stale.
 
 
-### Phase 2 — Canonical schema + Dallas & Collin adapters (golden-file tests) (NEXT; skipped ahead to Phase 3)
+### Phase 2 — Canonical schema + adapters (golden-file tests) — DONE 2026-10-12
+Each county DB now holds canonical tables (`property`, `valuation` per year,
+`improvement`, `land`, `exemption`, `deed`, `county_meta`; schema in
+`app/db.py`) filled by all four adapters, plus a derived `property_summary`
+table the app reads. `sale` became `deed`: no county publishes prices, so the
+table records transfer dates only. Golden-file tests (`tests/golden/`) pin
+every adapter's full output on its fixture. Rebuilding the real DBs gave the
+same summary values as before for all 2.37M properties, except 33,827 Dallas
+homes whose placeholder year built (0/1/1000) is now stored as unknown.
+New data now available for Phase 4: prior-year values (Dallas, Collin,
+Tarrant), quality/condition/effective year (all but Collin condition), extra
+structures (Dallas), all exemption codes, deed types/instruments.
 ### Phase 3 — Denton & Tarrant adapters + GIS lat/lon — DONE 2026-10-12
 All four counties build an app DB. Every property gets a parcel-centroid
 lat/lon (pure-Python shapefile reader + Lambert Conformal Conic inverse, no

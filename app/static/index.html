@@ -84,6 +84,7 @@ tr:hover { background: #f8fafc; }
       <div class="prop-item"><div class="label">Lot SqFt</div><div class="value" id="propLot">—</div></div>
       <div class="prop-item"><div class="label">Year Built</div><div class="value" id="propYear">—</div></div>
       <div class="prop-item"><div class="label">$/SqFt</div><div class="value" id="propPpsf">—</div></div>
+      <div class="prop-item" id="priorItem" style="display:none"><div class="label" id="priorLabel">Prior-Year Market</div><div class="value" id="propPrior" style="font-size:17px">—</div></div>
       <div class="prop-item"><div class="label">Deed Date</div><div class="value" id="propSold" style="font-size:15px">—</div></div>
     </div>
   </div>
@@ -350,6 +351,15 @@ function renderProperty(p) {
   $('propYear').textContent = p.year_built || '—';
   $('propPpsf').textContent = sqft > 0 ? fmt(val / sqft) : '—';
   $('propSold').textContent = p.deed_date || '—';
+  // Market value change from the prior year's roll, when the county publishes it.
+  if (p.prior_market_val && p.market_val) {
+    const pct = (p.market_val - p.prior_market_val) / p.prior_market_val * 100;
+    $('priorLabel').textContent = (_county.tax_year - 1) + ' Market Value';
+    $('propPrior').textContent = fmt(p.prior_market_val) + ' (' + (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%)';
+    $('priorItem').style.display = 'block';
+  } else {
+    $('priorItem').style.display = 'none';
+  }
   const map = $('propMap');
   if (p.lat != null && p.lon != null) {
     map.href = 'https://www.openstreetmap.org/?mlat=' + p.lat + '&mlon=' + p.lon + '#map=18/' + p.lat + '/' + p.lon;

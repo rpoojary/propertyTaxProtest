@@ -47,6 +47,7 @@ tarrant:
   date_format: "%Y-%m-%d"
   adapter: tarrant
   source: data/tarrant/raw/PropertyData_R_current.zip
+  prior_source: data/tarrant/raw/PropertyData_R_2025_certified.zip
   market_areas: data/tarrant/raw/2026ResidentialCompAttributeData.zip
   exemptions: data/tarrant/raw/PropertyData_Exemptions_2025_certified.zip
   parcels: data/tarrant/raw/Parcels.zip

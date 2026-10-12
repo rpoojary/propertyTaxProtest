@@ -1,4 +1,5 @@
 """Safe parsing of raw county values and summary statistics."""
+import math
 from datetime import datetime
 
 
@@ -12,9 +13,10 @@ def to_float(value):
     if not s:
         return None
     try:
-        return float(s)
+        f = float(s)
     except ValueError:
         return None
+    return f if math.isfinite(f) else None  # float() also accepts 'inf' and 'nan'
 
 
 def to_int(value):

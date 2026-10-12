@@ -8,7 +8,7 @@ REQUIRED = ("name", "cad_name", "cad_abbrev", "cad_address", "protest_url",
             "tax_year", "date_format", "db")
 
 # Settings holding file paths, made absolute relative to the repo root.
-PATH_KEYS = ("db", "source", "details", "parcels", "market_areas", "exemptions")
+PATH_KEYS = ("db", "source", "details", "parcels", "market_areas", "exemptions", "prior_source")
 
 # Fields safe to expose to the browser.
 PUBLIC = ("name", "cad_name", "cad_abbrev", "cad_address", "protest_url", "tax_year")

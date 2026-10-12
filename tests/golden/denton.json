@@ -1,0 +1,184 @@
+{
+ "deed": [
+  {
+   "account": "247593",
+   "deed_type": "GNV",
+   "instrument": "2018-137347",
+   "transfer_date": "2018-11-20"
+  }
+ ],
+ "exemption": [
+  {
+   "account": "247593",
+   "code": "HS",
+   "description": null,
+   "tax_year": 2026
+  },
+  {
+   "account": "8",
+   "code": "EX-XV",
+   "description": null,
+   "tax_year": 2026
+  },
+  {
+   "account": "8",
+   "code": "OTHER",
+   "description": null,
+   "tax_year": 2026
+  }
+ ],
+ "improvement": [
+  {
+   "account": "247593",
+   "area_sqft": null,
+   "beds": 4,
+   "condition": "Good",
+   "description": null,
+   "eff_year_built": 2010,
+   "full_baths": 2,
+   "half_baths": 1,
+   "kind": "main",
+   "living_sqft": 3376.0,
+   "pool": null,
+   "quality": "1750S1,GB2",
+   "seq": 1,
+   "stories": null,
+   "value": null,
+   "year_built": 2004
+  },
+  {
+   "account": "8",
+   "area_sqft": null,
+   "beds": null,
+   "condition": null,
+   "description": null,
+   "eff_year_built": null,
+   "full_baths": null,
+   "half_baths": null,
+   "kind": "main",
+   "living_sqft": null,
+   "pool": null,
+   "quality": null,
+   "seq": 1,
+   "stories": null,
+   "value": null,
+   "year_built": null
+  }
+ ],
+ "land": [
+  {
+   "account": "247593",
+   "seq": 1,
+   "size_sqft": 12079.188,
+   "value": 120000.0
+  },
+  {
+   "account": "8",
+   "seq": 1,
+   "size_sqft": 1302.0,
+   "value": 50.0
+  }
+ ],
+ "property": [
+  {
+   "account": "247593",
+   "city": "FLOWER MOUND",
+   "lat": null,
+   "legal_desc": null,
+   "lon": null,
+   "nbhd": "DC07218",
+   "parcel_id": "247593",
+   "state_cd": "A1",
+   "street_name": "SOUTHMOOR TRL",
+   "street_num": "3004",
+   "unit": null,
+   "zip": "75022"
+  },
+  {
+   "account": "8",
+   "city": "DENTON",
+   "lat": null,
+   "legal_desc": null,
+   "lon": null,
+   "nbhd": null,
+   "parcel_id": "8",
+   "state_cd": "C1",
+   "street_name": "N ELM ST",
+   "street_num": "100",
+   "unit": null,
+   "zip": "76201"
+  }
+ ],
+ "property_summary": [
+  {
+   "account": "247593",
+   "appraised_val": 820000.0,
+   "beds": 4,
+   "city": "FLOWER MOUND",
+   "deed_date": "2018-11-20",
+   "full_baths": 2,
+   "half_baths": 1,
+   "homestead": 1,
+   "improvement_val": 700000.0,
+   "land_val": 120000.0,
+   "lat": null,
+   "living_sqft": 3376.0,
+   "lon": null,
+   "lot_sqft": 12079.188,
+   "market_val": 820000.0,
+   "nbhd": "DC07218",
+   "parcel_id": "247593",
+   "prior_market_val": null,
+   "state_cd": "A1",
+   "street_name": "SOUTHMOOR TRL",
+   "street_num": "3004",
+   "year_built": 2004,
+   "zip": "75022"
+  },
+  {
+   "account": "8",
+   "appraised_val": 50.0,
+   "beds": null,
+   "city": "DENTON",
+   "deed_date": null,
+   "full_baths": null,
+   "half_baths": null,
+   "homestead": 0,
+   "improvement_val": 0.0,
+   "land_val": 50.0,
+   "lat": null,
+   "living_sqft": null,
+   "lon": null,
+   "lot_sqft": 1302.0,
+   "market_val": 50.0,
+   "nbhd": null,
+   "parcel_id": "8",
+   "prior_market_val": null,
+   "state_cd": "C1",
+   "street_name": "N ELM ST",
+   "street_num": "100",
+   "year_built": null,
+   "zip": "76201"
+  }
+ ],
+ "valuation": [
+  {
+   "account": "247593",
+   "appraised_val": 820000.0,
+   "assessed_val": 800000.0,
+   "improvement_val": 700000.0,
+   "land_val": 120000.0,
+   "market_val": 820000.0,
+   "tax_year": 2026
+  },
+  {
+   "account": "8",
+   "appraised_val": 50.0,
+   "assessed_val": 50.0,
+   "improvement_val": 0.0,
+   "land_val": 50.0,
+   "market_val": 50.0,
+   "tax_year": 2026
+  }
+ ]
+}

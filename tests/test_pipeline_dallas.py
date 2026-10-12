@@ -2,14 +2,12 @@ import sqlite3
 
 import pytest
 
+from tests.conftest import read_rows
+
 
 @pytest.fixture
 def rows(dallas_db):
-    db = sqlite3.connect(dallas_db)
-    db.row_factory = sqlite3.Row
-    out = {r["account"]: dict(r) for r in db.execute("SELECT * FROM property")}
-    db.close()
-    return out
+    return read_rows(dallas_db)
 
 
 def test_all_accounts_loaded(rows):
@@ -66,3 +64,17 @@ def test_locations(rows, dallas_db):
     assert rows["C0001"]["lat"] is None
     meta = dict(sqlite3.connect(dallas_db).execute("SELECT key, value FROM county_meta"))
     assert meta["located"] == "1"
+
+
+def test_canonical_detail(dallas_db):
+    impr = sqlite3.connect(dallas_db).execute(
+        "SELECT kind, description, condition, year_built, eff_year_built, pool FROM improvement"
+        " WHERE account='S0001' ORDER BY kind, seq"
+    ).fetchall()
+    assert impr == [("main", "14", "GOOD", 2010, 2012, 1), ("other", "DETACHED GARAGE", None, 2010, None, None),
+                    ("other", "STORAGE BUILDING", None, None, None, None)]  # 1000 = placeholder year
+    rows = read_rows(dallas_db)
+    assert rows["S0001"]["prior_market_val"] == 380000
+    sql = "SELECT code FROM exemption WHERE account='S0001' ORDER BY code"
+    codes = sqlite3.connect(dallas_db).execute(sql).fetchall()
+    assert [c[0] for c in codes] == ["HS", "OV65"]

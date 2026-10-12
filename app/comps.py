@@ -10,7 +10,7 @@ ROW_FIELDS = """account, street_num || ' ' || street_name AS address, deed_date,
 
 PROPERTY_FIELDS = """account, street_num, street_name, city, zip, state_cd, nbhd, deed_date,
     appraised_val, improvement_val, land_val, beds, full_baths, half_baths,
-    living_sqft, year_built, lot_sqft, homestead, lat, lon"""
+    living_sqft, year_built, lot_sqft, homestead, lat, lon, market_val, prior_market_val"""
 
 SQFT_BAND = 0.15
 MAX_ROWS = 200
@@ -29,19 +29,19 @@ def search(db, q, limit=20):
               "living_sqft, year_built")
     if len(parts) == 2 and parts[0].isdigit():
         rows = db.execute(
-            f"SELECT {fields} FROM property WHERE street_num = ? AND street_name LIKE ? ESCAPE '\\' "
+            f"SELECT {fields} FROM property_summary WHERE street_num = ? AND street_name LIKE ? ESCAPE '\\' "
             "ORDER BY street_name LIMIT ?",
             [parts[0], f"%{like_escape(parts[1])}%", limit])
     else:
         rows = db.execute(
-            f"SELECT {fields} FROM property WHERE street_name LIKE ? ESCAPE '\\' OR account LIKE ? ESCAPE '\\' "
+            f"SELECT {fields} FROM property_summary WHERE street_name LIKE ? ESCAPE '\\' OR account LIKE ? ESCAPE '\\' "
             "ORDER BY street_name, street_num LIMIT ?",
             [f"%{like_escape(q)}%", f"{like_escape(q)}%", limit])
     return [dict(r) for r in rows]
 
 
 def get_property(db, account):
-    row = db.execute(f"SELECT {PROPERTY_FIELDS} FROM property WHERE account = ?", [account]).fetchone()
+    row = db.execute(f"SELECT {PROPERTY_FIELDS} FROM property_summary WHERE account = ?", [account]).fetchone()
     if not row:
         return None
     prop = dict(row)
@@ -51,7 +51,7 @@ def get_property(db, account):
 
 def _query(db, where, params):
     rows = db.execute(
-        f"SELECT {ROW_FIELDS} FROM property WHERE {' AND '.join(where)} ORDER BY appraised_val",
+        f"SELECT {ROW_FIELDS} FROM property_summary WHERE {' AND '.join(where)} ORDER BY appraised_val",
         params).fetchall()
     return [dict(r) for r in rows]
 

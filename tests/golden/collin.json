@@ -1,0 +1,265 @@
+{
+ "deed": [
+  {
+   "account": "1001",
+   "deed_type": "WD",
+   "instrument": "2020000001",
+   "transfer_date": "2020-05-01"
+  },
+  {
+   "account": "1002",
+   "deed_type": "WD",
+   "instrument": "2025000002",
+   "transfer_date": "2025-08-15"
+  }
+ ],
+ "exemption": [
+  {
+   "account": "1001",
+   "code": "HS",
+   "description": "Homestead",
+   "tax_year": 2026
+  },
+  {
+   "account": "1001",
+   "code": "OV65",
+   "description": "Over 65",
+   "tax_year": 2026
+  }
+ ],
+ "improvement": [
+  {
+   "account": "1001",
+   "area_sqft": null,
+   "beds": 4,
+   "condition": null,
+   "description": null,
+   "eff_year_built": 2006,
+   "full_baths": 2,
+   "half_baths": 1,
+   "kind": "main",
+   "living_sqft": 2400.0,
+   "pool": 1,
+   "quality": "R07",
+   "seq": 1,
+   "stories": "2",
+   "value": null,
+   "year_built": 2004
+  },
+  {
+   "account": "1002",
+   "area_sqft": null,
+   "beds": null,
+   "condition": null,
+   "description": null,
+   "eff_year_built": null,
+   "full_baths": null,
+   "half_baths": null,
+   "kind": "main",
+   "living_sqft": 2350.0,
+   "pool": 0,
+   "quality": null,
+   "seq": 1,
+   "stories": null,
+   "value": null,
+   "year_built": 2005
+  },
+  {
+   "account": "1003",
+   "area_sqft": null,
+   "beds": null,
+   "condition": null,
+   "description": null,
+   "eff_year_built": 1985,
+   "full_baths": null,
+   "half_baths": null,
+   "kind": "main",
+   "living_sqft": 1800.0,
+   "pool": 0,
+   "quality": null,
+   "seq": 1,
+   "stories": "1",
+   "value": null,
+   "year_built": 1985
+  }
+ ],
+ "land": [
+  {
+   "account": "1001",
+   "seq": 1,
+   "size_sqft": 7200.0,
+   "value": 100000.0
+  },
+  {
+   "account": "1002",
+   "seq": 1,
+   "size_sqft": 8712.0,
+   "value": 100000.0
+  },
+  {
+   "account": "1003",
+   "seq": 1,
+   "size_sqft": null,
+   "value": 80000.0
+  }
+ ],
+ "property": [
+  {
+   "account": "1001",
+   "city": "PLANO",
+   "lat": null,
+   "legal_desc": "TEST ESTATES, BLK A, LOT 1",
+   "lon": null,
+   "nbhd": "N100",
+   "parcel_id": "1001",
+   "state_cd": "A",
+   "street_name": "SAMPLE LN",
+   "street_num": "10",
+   "unit": null,
+   "zip": "75074"
+  },
+  {
+   "account": "1002",
+   "city": "PLANO",
+   "lat": null,
+   "legal_desc": "TEST ESTATES, BLK A, LOT 2",
+   "lon": null,
+   "nbhd": "N100",
+   "parcel_id": "1002",
+   "state_cd": "A",
+   "street_name": "SAMPLE LN",
+   "street_num": "12",
+   "unit": null,
+   "zip": "75074"
+  },
+  {
+   "account": "1003",
+   "city": "PLANO",
+   "lat": null,
+   "legal_desc": "TEST ESTATES, BLK A, LOT 3",
+   "lon": null,
+   "nbhd": "N100",
+   "parcel_id": "1003",
+   "state_cd": "B",
+   "street_name": "N SAMPLE LN",
+   "street_num": "14",
+   "unit": "2",
+   "zip": "75074"
+  }
+ ],
+ "property_summary": [
+  {
+   "account": "1001",
+   "appraised_val": 420000.0,
+   "beds": 4,
+   "city": "PLANO",
+   "deed_date": "2020-05-01",
+   "full_baths": 2,
+   "half_baths": 1,
+   "homestead": 1,
+   "improvement_val": 320000.0,
+   "land_val": 100000.0,
+   "lat": null,
+   "living_sqft": 2400.0,
+   "lon": null,
+   "lot_sqft": 7200.0,
+   "market_val": 420000.0,
+   "nbhd": "N100",
+   "parcel_id": "1001",
+   "prior_market_val": 395000.0,
+   "state_cd": "A",
+   "street_name": "SAMPLE LN",
+   "street_num": "10",
+   "year_built": 2004,
+   "zip": "75074"
+  },
+  {
+   "account": "1002",
+   "appraised_val": 410000.0,
+   "beds": null,
+   "city": "PLANO",
+   "deed_date": "2025-08-15",
+   "full_baths": null,
+   "half_baths": null,
+   "homestead": 0,
+   "improvement_val": 310000.0,
+   "land_val": 100000.0,
+   "lat": null,
+   "living_sqft": 2350.0,
+   "lon": null,
+   "lot_sqft": 8712.0,
+   "market_val": 410000.0,
+   "nbhd": "N100",
+   "parcel_id": "1002",
+   "prior_market_val": null,
+   "state_cd": "A",
+   "street_name": "SAMPLE LN",
+   "street_num": "12",
+   "year_built": 2005,
+   "zip": "75074"
+  },
+  {
+   "account": "1003",
+   "appraised_val": 280000.0,
+   "beds": null,
+   "city": "PLANO",
+   "deed_date": null,
+   "full_baths": null,
+   "half_baths": null,
+   "homestead": 0,
+   "improvement_val": 200000.0,
+   "land_val": 80000.0,
+   "lat": null,
+   "living_sqft": 1800.0,
+   "lon": null,
+   "lot_sqft": null,
+   "market_val": 280000.0,
+   "nbhd": "N100",
+   "parcel_id": "1003",
+   "prior_market_val": null,
+   "state_cd": "B",
+   "street_name": "N SAMPLE LN",
+   "street_num": "14",
+   "year_built": 1985,
+   "zip": "75074"
+  }
+ ],
+ "valuation": [
+  {
+   "account": "1001",
+   "appraised_val": 395000.0,
+   "assessed_val": 380000.0,
+   "improvement_val": 300000.0,
+   "land_val": 95000.0,
+   "market_val": 395000.0,
+   "tax_year": 2025
+  },
+  {
+   "account": "1001",
+   "appraised_val": 420000.0,
+   "assessed_val": 400000.0,
+   "improvement_val": 320000.0,
+   "land_val": 100000.0,
+   "market_val": 420000.0,
+   "tax_year": 2026
+  },
+  {
+   "account": "1002",
+   "appraised_val": 410000.0,
+   "assessed_val": 410000.0,
+   "improvement_val": 310000.0,
+   "land_val": 100000.0,
+   "market_val": 410000.0,
+   "tax_year": 2026
+  },
+  {
+   "account": "1003",
+   "appraised_val": 280000.0,
+   "assessed_val": 280000.0,
+   "improvement_val": 200000.0,
+   "land_val": 80000.0,
+   "market_val": 280000.0,
+   "tax_year": 2026
+  }
+ ]
+}

@@ -1,0 +1,181 @@
+{
+ "deed": [
+  {
+   "account": "1309",
+   "deed_type": null,
+   "instrument": "D216201720",
+   "transfer_date": "2016-08-22"
+  }
+ ],
+ "exemption": [
+  {
+   "account": "1309",
+   "code": "HS",
+   "description": "HOMESTEAD GENERAL 11.13(b)",
+   "tax_year": 2025
+  }
+ ],
+ "improvement": [
+  {
+   "account": "1309",
+   "area_sqft": null,
+   "beds": null,
+   "condition": "Average",
+   "description": null,
+   "eff_year_built": 1995,
+   "full_baths": null,
+   "half_baths": null,
+   "kind": "main",
+   "living_sqft": 2550.0,
+   "pool": 1,
+   "quality": "Good",
+   "seq": 1,
+   "stories": null,
+   "value": null,
+   "year_built": 1910
+  },
+  {
+   "account": "6483",
+   "area_sqft": null,
+   "beds": null,
+   "condition": null,
+   "description": null,
+   "eff_year_built": null,
+   "full_baths": null,
+   "half_baths": null,
+   "kind": "main",
+   "living_sqft": 939.0,
+   "pool": 0,
+   "quality": null,
+   "seq": 1,
+   "stories": null,
+   "value": null,
+   "year_built": 1910
+  }
+ ],
+ "land": [
+  {
+   "account": "1309",
+   "seq": 1,
+   "size_sqft": 5000.0,
+   "value": 110000.0
+  },
+  {
+   "account": "6483",
+   "seq": 1,
+   "size_sqft": 1481.0400000000002,
+   "value": 11840.0
+  }
+ ],
+ "property": [
+  {
+   "account": "1309",
+   "city": "FORT WORTH",
+   "lat": null,
+   "legal_desc": null,
+   "lon": null,
+   "nbhd": "4T050C",
+   "parcel_id": "14437-29-32",
+   "state_cd": "A",
+   "street_name": "E WEATHERFORD ST",
+   "street_num": "704",
+   "unit": null,
+   "zip": "76102"
+  },
+  {
+   "account": "6483",
+   "city": null,
+   "lat": null,
+   "legal_desc": null,
+   "lon": null,
+   "nbhd": null,
+   "parcel_id": "14437-124-1B",
+   "state_cd": "A",
+   "street_name": "E PEACH ST",
+   "street_num": "922",
+   "unit": null,
+   "zip": null
+  }
+ ],
+ "property_summary": [
+  {
+   "account": "1309",
+   "appraised_val": 556381.0,
+   "beds": null,
+   "city": "FORT WORTH",
+   "deed_date": "2016-08-22",
+   "full_baths": null,
+   "half_baths": null,
+   "homestead": 1,
+   "improvement_val": 446381.0,
+   "land_val": 110000.0,
+   "lat": null,
+   "living_sqft": 2550.0,
+   "lon": null,
+   "lot_sqft": 5000.0,
+   "market_val": 556381.0,
+   "nbhd": "4T050C",
+   "parcel_id": "14437-29-32",
+   "prior_market_val": 500000.0,
+   "state_cd": "A",
+   "street_name": "E WEATHERFORD ST",
+   "street_num": "704",
+   "year_built": 1910,
+   "zip": "76102"
+  },
+  {
+   "account": "6483",
+   "appraised_val": 101114.0,
+   "beds": null,
+   "city": null,
+   "deed_date": null,
+   "full_baths": null,
+   "half_baths": null,
+   "homestead": 0,
+   "improvement_val": 89274.0,
+   "land_val": 11840.0,
+   "lat": null,
+   "living_sqft": 939.0,
+   "lon": null,
+   "lot_sqft": 1481.0400000000002,
+   "market_val": 101114.0,
+   "nbhd": null,
+   "parcel_id": "14437-124-1B",
+   "prior_market_val": null,
+   "state_cd": "A",
+   "street_name": "E PEACH ST",
+   "street_num": "922",
+   "year_built": 1910,
+   "zip": null
+  }
+ ],
+ "valuation": [
+  {
+   "account": "1309",
+   "appraised_val": 500000.0,
+   "assessed_val": 480000.0,
+   "improvement_val": 400000.0,
+   "land_val": 100000.0,
+   "market_val": 500000.0,
+   "tax_year": 2025
+  },
+  {
+   "account": "1309",
+   "appraised_val": 556381.0,
+   "assessed_val": 500000.0,
+   "improvement_val": 446381.0,
+   "land_val": 110000.0,
+   "market_val": 556381.0,
+   "tax_year": 2026
+  },
+  {
+   "account": "6483",
+   "appraised_val": 101114.0,
+   "assessed_val": 101114.0,
+   "improvement_val": 89274.0,
+   "land_val": 11840.0,
+   "market_val": 101114.0,
+   "tax_year": 2026
+  }
+ ]
+}
