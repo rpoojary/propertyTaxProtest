@@ -34,6 +34,7 @@ def dcad(path):
 COLLIN_DATA = "https://link.collincad.org/public/folder/1j1vp-rhx06rqkh3vz2ipw/AppraisalData/"
 COLLIN_GIS = "https://link.collincad.org/public/folder/blc8m6dbs0glddi_ixn5-a/CurrentGIS/"
 TAD = "https://www.tad.org/content/"
+DENTON = "https://dentoncad.net/data/_uploaded/files/datafiles/"
 
 # (local filename, url). Core set: latest certified + current-year roll,
 # parcel geometry, and the layout/code documents needed to read them.
@@ -66,9 +67,18 @@ MANIFEST = {
         ("PropertyData_Layouts.pdf", TAD + "forms/PropertyData&PropertyLocationLayouts.pdf"),
         ("Parcels.zip", TAD + "gis-data/Parcels.zip"),
     ],
-    # Denton CAD's exports live on dentoncad.net / denton.prodigycad.com,
-    # which must be allowed in the environment's network policy first.
-    "denton": [],
+    "denton": [
+        ("nightly_appraisals.zip", DENTON + "gis/nightly_appraisals.zip"),
+        ("nightly_appraisals_2026_Certified.zip", DENTON + "gis/nightly_appraisals_2026_Certified.zip"),
+        ("DCAD_Schema_2026.xlsx", DENTON + "gis/DCAD_Schema_2026.xlsx"),
+        ("schema.ini", DENTON + "gis/schema.ini"),
+        ("StateCodeDesc.pdf", DENTON + "gis/StateCodeDesc.pdf"),
+        ("LandTypeCodes.pdf", DENTON + "gis/LandTypeCodes.pdf"),
+        ("nightly_geodatabase.gdb.zip", DENTON + "gis/nightly_geodatabase.gdb.zip"),
+        ("2026_CERTIFIED_DATA_REAL.zip", DENTON + "2026/CertifiedDataReal/2026 CERTIFIED DATA - REAL.zip"),
+        ("TP_Legacy8.0.32-AppraisalExportLayout.xlsx",
+         DENTON + "2026/AppraisalExportLayout/TP_Legacy8.0.32-AppraisalExportLayout(UPDATED-2:17:26).xlsx"),
+    ],
 }
 
 

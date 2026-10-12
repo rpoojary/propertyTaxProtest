@@ -9,25 +9,25 @@ license; all are published by the appraisal districts for public download.
 dates are available everywhere, so "recently transferred" can be derived, but
 values are always *appraised* values.
 
-All parcel shapefiles are NAD83 Texas State Plane North Central (EPSG:2276,
-US feet). Reproject to WGS84 for lat/lon.
+Dallas, Collin and Tarrant parcel shapefiles are NAD83 Texas State Plane North Central (EPSG:2276,
+US feet); Denton's geodatabase projection is not yet checked. Reproject to WGS84 for lat/lon.
 
 ## Coverage summary
 
 | | Dallas | Collin | Tarrant | Denton |
 |---|---|---|---|---|
-| Status | ✅ downloaded | ✅ downloaded | ✅ downloaded | ❌ host blocked here |
-| Accounts | 827,412 | 509,444 (2027 roll) / 502,479 (2026) | 669,972 current | — |
-| Appraised value | ✅ | ✅ | ✅ | |
-| Living area / year built | ✅ | ✅ | ✅ | |
-| Bedrooms / baths | ✅ | ✅ 84% / 88% of res. (`CCAD-Appraisal-Data.csv` only) | ❌ not published | |
-| Land size | ✅ | ✅ | ✅ | |
-| Quality / condition | CDU rating, bldg class | class code | ✅ comp attribute file | |
-| Neighborhood code | ✅ | ✅ + nbhd adj. % | market area | |
-| Deed / transfer date | ✅ | ✅ | ✅ | |
-| Prior-year value | `PREV_MKT_VAL` | `prevVal*`, `cert_*` | 2025 certified file | |
-| ARB protest outcomes | ✅ notified/new/panel value | ✅ `ARBProtests*.csv` (not fetched) | `ARB_Indicator` flag only | |
-| Parcel geometry | ✅ key `Acct` | ✅ key `PROP_ID` | ✅ key `TAXPIN` = `GIS_Link` | |
+| Status | ✅ downloaded | ✅ downloaded | ✅ downloaded | ✅ downloaded |
+| Accounts | 827,412 | 509,444 (2027 roll) / 502,479 (2026) | 669,972 current | 381,106 (2026 certified) |
+| Appraised value | ✅ | ✅ | ✅ | ✅ |
+| Living area / year built | ✅ | ✅ | ✅ | ✅ |
+| Bedrooms / baths | ✅ | ✅ 84% / 88% of res. (`CCAD-Appraisal-Data.csv` only) | ❌ not published | ✅ in improvement attributes (full export only) |
+| Land size | ✅ | ✅ | ✅ | ✅ |
+| Quality / condition | CDU rating, bldg class | class code | ✅ comp attribute file | class code, condition (partial) |
+| Neighborhood code | ✅ | ✅ + nbhd adj. % | market area | `hood_cd` (full export only) |
+| Deed / transfer date | ✅ | ✅ | ✅ | ✅ |
+| Prior-year value | `PREV_MKT_VAL` | `prevVal*`, `cert_*` | 2025 certified file | nightly (2027) vs 2026 certified |
+| ARB protest outcomes | ✅ notified/new/panel value | ✅ `ARBProtests*.csv` (not fetched) | `ARB_Indicator` flag only | ✅ `APPRAISAL_ARB.TXT` status |
+| Parcel geometry | ✅ key `Acct` | ✅ key `PROP_ID` | ✅ key `TAXPIN` = `GIS_Link` | ✅ weekly geodatabase, key `pid` |
 
 ## Dallas — Dallas Central Appraisal District
 
@@ -119,15 +119,33 @@ attribute files, `Parcels_GeoDatabase.zip`, neighborhoods/schools/cities layers.
 
 ## Denton — Denton Central Appraisal District
 
-Not downloaded: `www.dentoncad.com` is a True Prodigy app that calls
-`prod-container.trueprodigyapi.com`, and the exports are hosted on
-`dentoncad.net` and `denton.prodigycad.com`. All three are denied by this
-cloud environment's network policy. Leads to verify once allowed:
+- Index page: `https://denton.prodigycad.com/data-downloads` (True Prodigy
+  app; needs `*.prodigycad.com`, `*.trueprodigyapi.com` and `cdn.builder.io`
+  to render). Files live on `dentoncad.net`, which serves plain Apache
+  directory indexes:
+  `https://dentoncad.net/data/_uploaded/files/datafiles/{2019..2026,gis}/`.
 
-- `https://denton.prodigycad.com/data-downloads` — bulk appraisal CSV, code
-  tables, weekly GIS shapefile exports.
-- `https://dentoncad.net/data/_uploaded/files/datafiles/2025/CertifiedDataAllProperty/Denton_AppraisalDataExtracts_ALL(CERTIFIED).zip`
-  (~413 MB, July 2025); look for a `2026/` sibling.
+| File | Contents |
+|---|---|
+| `gis/nightly_appraisals.zip` (63 MB) | Current (2027) roll as CSV, one row per parcel/owner, 384,308 rows. Address, `stateCodes`, `imprvActualYearBuilt`, `imprvEffYearBuilt`, `imprvMainArea`, `imprvClasses`, `land_sqft`, `ownerMarketValue`, `ownerAppraisedValue`, `deedDt`, `geoID`, `pid`. **No beds/baths, no neighborhood code.** |
+| `gis/nightly_appraisals_2026_Certified.zip` | Same layout, 2026 certified |
+| `gis/nightly_geodatabase.gdb.zip` (410 MB) | Parcels and subdivisions joined to appraisal data, file geodatabase, updated weekly |
+| `gis/DCAD_Schema_2026.xlsx`, `gis/schema.ini` | Field schema for the nightly CSV/geodatabase |
+| `2026/CertifiedDataReal/2026 CERTIFIED DATA - REAL.zip` (781 MB, ~12 GB unzipped) | Full True Prodigy "Legacy 8.0" fixed-width export at certification |
+| `2026/AppraisalExportLayout/TP_Legacy8.0.32-AppraisalExportLayout(...).xlsx` | Fixed-width layout for the export above |
+| `gis/StateCodeDesc.pdf`, `gis/LandTypeCodes.pdf` | Code tables |
 
-Domains to add to the environment's allowed list: `dentoncad.net`,
-`*.dentoncad.net`, `*.prodigycad.com`, `*.trueprodigyapi.com`.
+The full export (all keyed by `prop_id` + `prop_val_yr`) contains
+`APPRAISAL_INFO` (9,924-char records, 381,106 rows; includes `hood_cd`),
+`IMPROVEMENT_INFO`, `IMPROVEMENT_DETAIL` (segments with type, class, year,
+area, value), `IMPROVEMENT_DETAIL_ATTR`, `LAND_DETAIL`, `ARB`, `AGENT`,
+`ENTITY_INFO`, `SKETCH_INFO`, `SB12`. Bedrooms and baths are rows in
+`IMPROVEMENT_DETAIL_ATTR` (fixed-width: description at cols 53–77, code at
+78–87): `Bedrooms` (272,441 rows, code = count) and `Plumbing` (code = bath
+count, e.g. `2`, `2.5`, `3.5`). Join path: attr → detail on
+`prop_id, prop_val_yr, imprv_id, imprv_det_id`.
+
+Also available, not fetched: certified exports for 2019–2025, the
+all-property / personal / mineral / mobile-home variants, a JSON export
+(`CertifiedDataJSON/`), 2025 roll corrections, `parcels.zip` (2023, stale),
+and the shapefile export on Google Drive.

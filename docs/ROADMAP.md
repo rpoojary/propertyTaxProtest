@@ -29,7 +29,7 @@
 Download each county's bulk export, inspect layouts, document fields in
 `docs/data-sources.md`. Raw files go in `data/` (gitignored, never committed).
 
-Status (2026-10-12): Dallas, Collin, Tarrant downloaded and documented in
+Status (2026-10-12): all four counties downloaded and documented in
 `docs/data-sources.md`; fetch with `python scripts/fetch_data.py`.
 
 | County | Source (verified) | Notes |
@@ -37,12 +37,13 @@ Status (2026-10-12): Dallas, Collin, Tarrant downloaded and documented in
 | Dallas | olp.dallascad.org/DataProducts.aspx; files via `www.dallascad.org/ViewPDFs.aspx` | Certified CSV tables + ARB outcomes + `PARCEL_GEOM.zip`. |
 | Collin | link.collincad.org public shares (linked from collincad.org) | Nightly CSVs; `CCAD-Appraisal-Data.csv` has beds/baths. |
 | Tarrant | www.tad.org/resources/data-downloads | Pipe-delimited roll, comp attributes (quality/condition/equity value), parcels. No beds/baths. |
-| Denton | denton.prodigycad.com/data-downloads, dentoncad.net | **Blocked** by network policy; needs domains below. |
+| Denton | denton.prodigycad.com/data-downloads → files on dentoncad.net | Nightly CSV + weekly geodatabase; beds/baths only in the full fixed-width certified export. |
 
 Cloud sessions need these domains allowed in the environment's network
 settings: `dallascad.org`, `*.dallascad.org`, `tad.org`, `*.tad.org`,
 `collincad.org`, `*.collincad.org`, `dentoncad.com`, `*.dentoncad.com`,
-`dentoncad.net`, `*.dentoncad.net`, `*.prodigycad.com`, `*.trueprodigyapi.com`.
+`dentoncad.net`, `*.dentoncad.net`, `*.prodigycad.com`, `*.trueprodigyapi.com`,
+`cdn.builder.io` (only to render Denton's index page).
 
 ### Phase 1 — Foundation (~1 day)
 1. Restructure repo: `app/` (main.py, db.py, routes/, static/, wsgi.py),
