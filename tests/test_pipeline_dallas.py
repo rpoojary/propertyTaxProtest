@@ -59,3 +59,10 @@ def test_meta(dallas_db):
     meta = dict(db.execute("SELECT key, value FROM county_meta"))
     assert meta["tax_year"] == "2026"
     assert meta["rows"] == "9"
+
+
+def test_locations(rows, dallas_db):
+    assert rows["S0001"]["lat"] == pytest.approx(32.89, abs=1e-5)
+    assert rows["C0001"]["lat"] is None
+    meta = dict(sqlite3.connect(dallas_db).execute("SELECT key, value FROM county_meta"))
+    assert meta["located"] == "1"

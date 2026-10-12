@@ -21,7 +21,10 @@ CREATE TABLE property (
     living_sqft   REAL,
     year_built    INTEGER,
     lot_sqft      REAL,
-    homestead     INTEGER
+    homestead     INTEGER,
+    parcel_id     TEXT,     -- key into the county parcel map
+    lat           REAL,     -- parcel centroid, WGS84
+    lon           REAL
 );
 CREATE TABLE county_meta (key TEXT PRIMARY KEY, value TEXT);
 """
@@ -32,9 +35,11 @@ CREATE INDEX idx_prop_zip ON property(zip);
 CREATE INDEX idx_prop_nbhd ON property(nbhd);
 """
 
+PARCEL_INDEX = "CREATE INDEX IF NOT EXISTS idx_prop_parcel ON property(parcel_id)"
+
 COLUMNS = ("account", "street_num", "street_name", "city", "zip", "state_cd", "nbhd",
            "deed_date", "appraised_val", "improvement_val", "land_val", "beds",
-           "full_baths", "half_baths", "living_sqft", "year_built", "lot_sqft", "homestead")
+           "full_baths", "half_baths", "living_sqft", "year_built", "lot_sqft", "homestead", "parcel_id")
 
 
 def connect_ro(path):

@@ -7,6 +7,9 @@ CONFIG_PATH = os.path.join(ROOT, "counties", "config.yaml")
 REQUIRED = ("name", "cad_name", "cad_abbrev", "cad_address", "protest_url",
             "tax_year", "date_format", "db")
 
+# Settings holding file paths, made absolute relative to the repo root.
+PATH_KEYS = ("db", "source", "details", "parcels", "market_areas", "exemptions")
+
 # Fields safe to expose to the browser.
 PUBLIC = ("name", "cad_name", "cad_abbrev", "cad_address", "protest_url", "tax_year")
 
@@ -27,7 +30,7 @@ def normalize(cid, cfg):
     out = dict(cfg)
     out["id"] = cid
     out["tax_year"] = int(cfg["tax_year"])
-    for key in ("db", "source", "details"):
+    for key in PATH_KEYS:
         if out.get(key) and not os.path.isabs(out[key]):
             out[key] = os.path.join(ROOT, out[key])
     return out

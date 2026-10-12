@@ -74,6 +74,7 @@ tr:hover { background: #f8fafc; }
     <div style="margin-bottom:12px">
       <span>Account: <strong id="propAccount">—</strong></span>
       <span style="margin-left:16px">Homestead: <span id="propHomestead" class="badge">—</span></span>
+      <a id="propMap" target="_blank" rel="noopener" style="margin-left:16px;display:none">View on map</a>
     </div>
     <div class="prop-grid">
       <div class="prop-item"><div class="label">Appraised Value</div><div class="value" id="propValue">—</div></div>
@@ -349,6 +350,13 @@ function renderProperty(p) {
   $('propYear').textContent = p.year_built || '—';
   $('propPpsf').textContent = sqft > 0 ? fmt(val / sqft) : '—';
   $('propSold').textContent = p.deed_date || '—';
+  const map = $('propMap');
+  if (p.lat != null && p.lon != null) {
+    map.href = 'https://www.openstreetmap.org/?mlat=' + p.lat + '&mlon=' + p.lon + '#map=18/' + p.lat + '/' + p.lon;
+    map.style.display = 'inline';
+  } else {
+    map.style.display = 'none';
+  }
   const hs = $('propHomestead');
   if (p.homestead) { hs.textContent = 'Yes ✓'; hs.className = 'badge yes'; }
   else { hs.textContent = 'No'; hs.className = 'badge no'; }

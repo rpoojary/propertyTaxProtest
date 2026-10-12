@@ -24,8 +24,14 @@ def county_cfg(db, **extra):
 
 @pytest.fixture(scope="session")
 def dallas_db(tmp_path_factory):
-    path = str(tmp_path_factory.mktemp("db") / "dallas.db")
-    build(normalize("dallas", county_cfg(path)), log=lambda *a: None)
+    from pipeline.geo import LCC
+    from tests.shapefile_util import PRJ_2276, square, write_zip
+
+    tmp = tmp_path_factory.mktemp("db")
+    x, y = LCC.from_prj(PRJ_2276).forward(32.89, -96.94)
+    parcels = write_zip(tmp / "PARCEL_GEOM.zip", "Acct", [("S0001", [square(x, y, 40)]), ("NOPE", [square(x, y, 9)])])
+    path = str(tmp / "dallas.db")
+    build(normalize("dallas", county_cfg(path, parcels=str(parcels), parcels_key="Acct")), log=lambda *a: None)
     return path
 
 

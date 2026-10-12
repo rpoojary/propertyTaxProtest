@@ -69,8 +69,16 @@ real adapter, not a committed `.db`.
 5. Rewrite README; mark DEPLOY_GODADDY.md stale.
 
 
-### Phase 2 — Canonical schema + Dallas & Collin adapters (golden-file tests) (NEXT)
-### Phase 3 — Denton & Tarrant adapters + GIS lat/lon
+### Phase 2 — Canonical schema + Dallas & Collin adapters (golden-file tests) (NEXT; skipped ahead to Phase 3)
+### Phase 3 — Denton & Tarrant adapters + GIS lat/lon — DONE 2026-10-12
+All four counties build an app DB. Every property gets a parcel-centroid
+lat/lon (pure-Python shapefile reader + Lambert Conformal Conic inverse, no
+GDAL). Coverage of residential properties: Dallas 93%, Collin 97%, Tarrant
+100%, Denton 98% (Denton uses its 2023 parcel shapefile; the current parcels
+only ship as a file geodatabase). Lat/lon is stored and shown as a map link;
+radius-based comps are left for Phase 4. Tarrant has no beds/baths and only
+owner-occupied homes get a ZIP (72%); its market area stands in for the
+neighborhood code.
 ### Phase 4 — Equity comp engine (§42.26(a)(3) adjusted median, adjustment grid) + server-side PDF, prefilled Comptroller Form 50-132, §41.461 evidence-request reminder
 ### Phase 5 — Public launch: property pages, county guides, Cloudflare, analytics, ads
 
@@ -78,4 +86,9 @@ real adapter, not a committed `.db`.
 - Comp medians are unadjusted; §42.26(a)(3) calls for appropriately adjusted
   comparables (Phase 4).
 - Collin lot size is only published for ~30% of homes.
-- Tarrant and Denton have no app DB adapter yet (Phase 3).
+- Tarrant market areas are broader than Dallas/Collin neighborhoods, so the
+  unadjusted neighborhood set can mix very different homes.
+- Tarrant homes that are not owner-occupied have no ZIP, so they only get the
+  neighborhood comparison set.
+- Denton parcels created after Dec 2023 have no lat/lon until the geodatabase
+  can be read.

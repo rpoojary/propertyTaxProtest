@@ -29,6 +29,19 @@ US feet); Denton's geodatabase projection is not yet checked. Reproject to WGS84
 | ARB protest outcomes | ✅ notified/new/panel value | ✅ `ARBProtests*.csv` (not fetched) | `ARB_Indicator` flag only | ✅ `APPRAISAL_ARB.TXT` status |
 | Parcel geometry | ✅ key `Acct` | ✅ key `PROP_ID` | ✅ key `TAXPIN` = `GIS_Link` | ✅ weekly geodatabase, key `pid` |
 
+## How the app DB uses these sources
+
+| County | Roll | Beds/baths | Neighborhood | ZIP / city | Homestead | Parcels (key) |
+|---|---|---|---|---|---|---|
+| Dallas | `DCAD2026_CURRENT.zip` tables | `RES_DETAIL` | `NBHD_CD` | situs | `APPLIED_STD_EXEMPT` | `PARCEL_GEOM.zip` (`Acct`) |
+| Collin | `AppraisalData-Public-2026.csv` | `CCAD-Appraisal-Data.csv` | `nbhdCode` | situs | `exemptHmstdFlag` | `parcels_with_appraisal_data_R5.zip` (`PROP_ID`) |
+| Tarrant | `PropertyData(Delimited)_R` | not published | comp file Market Area | owner address when it equals the situs (72%) | 2025 certified exemptions | `Parcels.zip` (`TAXPIN` = `GIS_Link`) |
+| Denton | `nightly_appraisals_2026_Certified` | export `IMPROVEMENT_DETAIL_ATTR` | export `APPRAISAL_INFO.hood_cd` | situs | `exemptions` HS/DVHS | `parcels.zip` 2023 (`prop_id`) |
+
+Tarrant's `PropertyLocation` file covers only ~4k commercial records, so it
+cannot supply home ZIPs. Tarrant values use `Total_Value` (market) because
+`Appraised_Value` can carry the homestead cap.
+
 ## Dallas — Dallas Central Appraisal District
 
 - Index page: `https://olp.dallascad.org/DataProducts.aspx` (the `www.` host

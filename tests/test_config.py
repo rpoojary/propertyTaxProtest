@@ -6,6 +6,7 @@ from app.config import load_counties, normalize, public_view
 def test_repo_config_is_valid():
     counties = load_counties()
     assert set(counties) == {"dallas", "collin", "tarrant", "denton"}
+    assert all(c.get("adapter") for c in counties.values())
     for cfg in counties.values():
         assert isinstance(cfg["tax_year"], int)
         assert cfg["db"].startswith("/")

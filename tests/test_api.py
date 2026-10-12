@@ -53,3 +53,10 @@ def test_not_found(client, url):
     r = client.get(url)
     assert r.status_code == 404
     assert "error" in r.get_json()
+
+
+def test_property_location(client):
+    p = client.get("/api/dallas/property/S0001").get_json()
+    assert p["lat"] == pytest.approx(32.89, abs=1e-5)
+    assert p["lon"] == pytest.approx(-96.94, abs=1e-5)
+    assert client.get("/api/dallas/property/C0001").get_json()["lat"] is None

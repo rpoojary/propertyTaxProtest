@@ -10,8 +10,8 @@ Not legal or appraisal advice. Product decisions and the phase plan are in
 [`docs/ROADMAP.md`](docs/ROADMAP.md); county data sources are in
 [`docs/data-sources.md`](docs/data-sources.md).
 
-Counties: Dallas and Collin work end to end. Tarrant and Denton data is
-downloaded but has no app DB adapter yet.
+Counties: Dallas, Collin, Tarrant and Denton. Tarrant does not publish
+bedroom/bath counts, so its comparisons match on size only.
 
 ## Layout
 
@@ -21,6 +21,7 @@ app/                 Flask app: main.py (factory + dev server), wsgi.py,
 counties/config.yaml per-county settings (CAD name/address, tax year, paths)
 counties/<county>/   adapter.py: raw export -> app DB
 pipeline/build_db.py build a county's app DB
+pipeline/geo.py      parcel shapefile centroids -> lat/lon (no GDAL needed)
 scripts/fetch_data.py      download raw county exports into data/
 scripts/query_comps.py     print a property's comparables from the command line
 tests/               pytest suite; fixtures/ holds synthetic Dallas-format CSVs
@@ -33,9 +34,8 @@ Python 3.11+.
 
 ```bash
 pip install -r requirements-dev.txt
-python scripts/fetch_data.py dallas collin     # ~1.7 GB of raw exports
-python pipeline/build_db.py dallas             # -> data/dallas/app.db
-python pipeline/build_db.py collin             # -> data/collin/app.db
+python scripts/fetch_data.py                   # ~3.5 GB of raw exports, all counties
+for c in dallas collin tarrant denton; do python pipeline/build_db.py $c; done
 ```
 
 ## Run

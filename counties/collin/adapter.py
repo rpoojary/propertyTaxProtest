@@ -69,6 +69,7 @@ def build(conn, cfg, log=print):
                 "year_built": to_int(r["imprvYearBuilt"]),
                 "lot_sqft": lot,
                 "homestead": int(r["exemptHmstdFlag"].strip().upper() in ("T", "TRUE", "Y")),
+                "parcel_id": acct,
             }
 
     return insert_properties(conn, rows())

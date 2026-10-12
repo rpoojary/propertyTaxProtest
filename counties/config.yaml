@@ -5,6 +5,8 @@
 #                "recently transferred" filter covers deeds from tax_year - 1 on.
 #   date_format  strptime format of deed dates in the county's raw export.
 #   adapter      module under counties/ that builds the app DB (null = none yet).
+#   parcels      zipped parcel shapefile; parcels_key is its column matching
+#                property.parcel_id (gives each property a lat/lon centroid).
 
 dallas:
   name: Dallas County
@@ -16,6 +18,8 @@ dallas:
   date_format: "%m/%d/%Y"
   adapter: dallas
   source: data/dallas/raw/DCAD2026_CURRENT.zip
+  parcels: data/dallas/raw/PARCEL_GEOM.zip
+  parcels_key: Acct
   db: data/dallas/app.db
 
 collin:
@@ -29,6 +33,8 @@ collin:
   adapter: collin
   source: data/collin/raw/AppraisalData-Public-2026.csv
   details: data/collin/raw/CCAD-Appraisal-Data.csv
+  parcels: data/collin/raw/parcels_with_appraisal_data_R5.zip
+  parcels_key: PROP_ID
   db: data/collin/app.db
 
 tarrant:
@@ -39,7 +45,12 @@ tarrant:
   protest_url: https://www.tad.org/
   tax_year: 2026
   date_format: "%Y-%m-%d"
-  adapter: null
+  adapter: tarrant
+  source: data/tarrant/raw/PropertyData_R_current.zip
+  market_areas: data/tarrant/raw/2026ResidentialCompAttributeData.zip
+  exemptions: data/tarrant/raw/PropertyData_Exemptions_2025_certified.zip
+  parcels: data/tarrant/raw/Parcels.zip
+  parcels_key: TAXPIN
   db: data/tarrant/app.db
 
 denton:
@@ -50,5 +61,9 @@ denton:
   protest_url: https://denton.prodigycad.com/
   tax_year: 2026
   date_format: "%Y-%m-%d"
-  adapter: null
+  adapter: denton
+  source: data/denton/raw/nightly_appraisals_2026_Certified.zip
+  details: data/denton/raw/2026_CERTIFIED_DATA_REAL.zip
+  parcels: data/denton/raw/parcels_2023.zip
+  parcels_key: prop_id
   db: data/denton/app.db

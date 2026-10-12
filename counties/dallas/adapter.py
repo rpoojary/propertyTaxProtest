@@ -78,6 +78,7 @@ def build(conn, cfg, log=print):
                 "year_built": yr,
                 "lot_sqft": land.get(acct),
                 "homestead": int(acct in homestead),
+                "parcel_id": acct,
             }
 
     return insert_properties(conn, rows())

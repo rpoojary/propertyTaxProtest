@@ -59,6 +59,7 @@ MANIFEST = {
     ],
     "tarrant": [
         ("PropertyData_R_current.zip", TAD + "data-download/PropertyData(Delimited)_R.ZIP"),
+        ("PropertyLocation_current.zip", TAD + "data-download/PropertyLocation(Delimited).ZIP"),
         ("PropertyData_R_2025_certified.zip", TAD + "data-download/PropertyData_R_2025(Certified).ZIP"),
         ("PropertyData_Exemptions_2025_certified.zip",
          TAD + "data-download/PropertyData_Exemptions_2025(Certified).ZIP"),
@@ -75,6 +76,7 @@ MANIFEST = {
         ("StateCodeDesc.pdf", DENTON + "gis/StateCodeDesc.pdf"),
         ("LandTypeCodes.pdf", DENTON + "gis/LandTypeCodes.pdf"),
         ("nightly_geodatabase.gdb.zip", DENTON + "gis/nightly_geodatabase.gdb.zip"),
+        ("parcels_2023.zip", DENTON + "gis/parcels.zip"),
         ("2026_CERTIFIED_DATA_REAL.zip", DENTON + "2026/CertifiedDataReal/2026 CERTIFIED DATA - REAL.zip"),
         ("TP_Legacy8.0.32-AppraisalExportLayout.xlsx",
          DENTON + "2026/AppraisalExportLayout/TP_Legacy8.0.32-AppraisalExportLayout(UPDATED-2:17:26).xlsx"),
