@@ -109,7 +109,18 @@ neighborhood code.
   evidence-request (§41.461) reminders.
 - Form 50-132 prefill is NOT done: every copy of the form is on hosts this
   environment cannot reach (comptroller.texas.gov). Needs that domain allowed.
-### Phase 5 — Public launch: property pages, county guides, Cloudflare, analytics, ads
+### Phase 5 — Public launch (IN PROGRESS)
+Done 2026-10-13:
+- Serverless static site (`site/`): data exported as JSON shards
+  (`pipeline/export_static.py`, ~1.88M homes in ~6k files), comparison sets,
+  equity analysis and letter ported to JS (`site/js/engine.js`), PDF drawn
+  in the browser (`site/js/pdf.js`). Parity: identical to Python on all four
+  county fixtures (CI) and on 800 random real homes; browser PDF contains
+  every word of the Python letter.
+- Confidential records (§25.025) excluded from everything the app serves.
+- Deploy workflow to Cloudflare Pages (needs Cloudflare secrets; see README).
+Remaining: property pages (`/tx/<county>/<address-slug>`), county guides,
+sitemap, analytics, ads, privacy page, Form 50-132 prefill.
 
 ## Known issues in current code
 - Bedrooms/baths, pools and other structures are not adjusted in the equity

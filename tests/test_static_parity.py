@@ -80,3 +80,30 @@ def test_engine_matches_python(county, request, tmp_path):
     js = js_results(tmp_path, county, cfg, accounts)
     for account in accounts:
         compare(py[account], js[account], f"{county}:{account}")
+
+
+def test_browser_pdf_contains_every_word(tmp_path):
+    """site/js/pdf.js draws every word of the letter blocks, across pages, as a valid PDF."""
+    pypdf = pytest.importorskip("pypdf")
+    from tests.test_letter import CFG, NO_SETS, analysis
+
+    s, eq = analysis()
+    owner = letter.clean_owner_input({"owner_name": "Pat (O'Brien) \\ Tester", "conditions": ["Roof leaks"] * 12,
+                                      "repairs": [{"desc": "Roof", "cost": 1500}]})
+    content = letter.build(CFG, s, eq, NO_SETS, owner, today=TODAY)
+    out = tmp_path / "letter.pdf"
+    subprocess.run([NODE, str(SCRIPT.parent / "render_pdf.js"), str(out)], input=json.dumps(content), text=True,
+                   check=True)
+    reader = pypdf.PdfReader(str(out))
+    text = "".join(page.extract_text() for page in reader.pages).replace("\n", "").replace(" ", "")
+    words = []
+    for b in content["blocks"]:
+        if b["t"] == "p":
+            words += "".join(t for t, _ in b["runs"]).split()
+        elif b["t"] == "table":
+            words += [w for row in b["rows"] for cell in row for w in cell.split()]
+        elif b["t"] != "space":
+            words += b["text"].split()
+    assert [w for w in words if w not in text] == []
+    assert len(reader.pages) >= 2
+    assert reader.metadata.title == f"Property Tax Protest - {content['address']}"

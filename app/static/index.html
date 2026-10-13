@@ -271,6 +271,7 @@ tr:hover { background: #f8fafc; }
 <script>
 const $ = id => document.getElementById(id);
 const fmt = n => '$' + Math.round(n).toLocaleString();
+const fmtSigned = n => (n > 0 ? '+' : n < 0 ? '−' : '') + fmt(Math.abs(n));
 // Escape any DB- or user-supplied text before it goes into HTML.
 const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
@@ -419,7 +420,7 @@ function renderEquity(prop, eq) {
     $('equityStats').innerHTML =
       '<div class="stat"><div class="label">Median Adjusted</div><div class="val">' + fmt(eq.median_adjusted) + '</div></div>' +
       '<div class="stat"><div class="label">Unadjusted Median</div><div class="val">' + fmt(eq.unadjusted_median) + '</div></div>' +
-      '<div class="stat"><div class="label">You vs Median</div><div class="val" style="' + (d > 0 ? 'color:#dc2626' : 'color:#059669') + '">' + (d > 0 ? '+' : '') + fmt(d) + '</div></div>';
+      '<div class="stat"><div class="label">You vs Median</div><div class="val" style="' + (d > 0 ? 'color:#dc2626' : 'color:#059669') + '">' + fmtSigned(d) + '</div></div>';
   } else {
     $('equityStats').innerHTML = '';
   }
@@ -474,12 +475,11 @@ function renderStats(id, stats, propVal) {
   if (!stats.count) { $(id).innerHTML = ''; return; }
   const diff = propVal - stats.median;
   const diffClass = diff > 0 ? 'color:#dc2626' : 'color:#059669';
-  const sign = diff > 0 ? '+' : '';
   $(id).innerHTML =
     '<div class="stat"><div class="label">Count</div><div class="val">' + stats.count + '</div></div>' +
     '<div class="stat"><div class="label">Median Appraised</div><div class="val">' + fmt(stats.median) + '</div></div>' +
     '<div class="stat"><div class="label">Average Appraised</div><div class="val">' + fmt(stats.average) + '</div></div>' +
-    '<div class="stat"><div class="label">You vs Median</div><div class="val" style="' + diffClass + '">' + sign + fmt(diff) + '</div></div>';
+    '<div class="stat"><div class="label">You vs Median</div><div class="val" style="' + diffClass + '">' + fmtSigned(diff) + '</div></div>';
 }
 
 // Repair rows

@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Property Tax Protest Helper</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; }
+.header { background: linear-gradient(135deg, #1a365d, #2563eb); color: white; padding: 32px 20px; text-align: center; }
+.header h1 { font-size: 28px; margin-bottom: 8px; }
+.header p { opacity: 0.85; font-size: 15px; }
+.container { max-width: 960px; margin: 0 auto; padding: 20px; }
+.search-box { background: white; border-radius: 12px; padding: 24px; margin: -30px auto 20px; max-width: 700px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); position: relative; z-index: 1; }
+.search-box input { width: 100%; padding: 14px 18px; font-size: 17px; border: 2px solid #ddd; border-radius: 8px; outline: none; transition: border 0.2s; }
+.search-box input:focus { border-color: #2563eb; }
+.search-box label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px; }
+.search-hint { font-size: 12px; color: #999; margin-top: 6px; }
+.results { background: white; border-radius: 8px; margin-top: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); max-height: 300px; overflow-y: auto; display: none; }
+.results .item { padding: 12px 18px; cursor: pointer; border-bottom: 1px solid #f0f0f0; transition: background 0.15s; }
+.results .item:hover { background: #f0f7ff; }
+.results .item .addr { font-weight: 600; }
+.results .item .detail { font-size: 13px; color: #777; margin-top: 2px; }
+.card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); display: none; }
+.card h2 { font-size: 20px; margin-bottom: 16px; color: #1a365d; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; }
+.card h3 { font-size: 16px; margin: 20px 0 10px; color: #374151; }
+.prop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.prop-item { background: #f8fafc; border-radius: 8px; padding: 12px; text-align: center; }
+.prop-item .label { font-size: 11px; text-transform: uppercase; color: #888; letter-spacing: 0.5px; }
+.prop-item .value { font-size: 22px; font-weight: 700; color: #1a365d; margin-top: 4px; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.badge.yes { background: #d1fae5; color: #065f46; }
+.badge.no { background: #fee2e2; color: #991b1b; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 10px 0; }
+th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #eee; }
+th { background: #f8fafc; font-weight: 600; color: #555; font-size: 12px; text-transform: uppercase; letter-spacing: 0.3px; position: sticky; top: 0; }
+tr:hover { background: #f8fafc; }
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 12px 0; }
+.stat { background: #f0f7ff; border-radius: 8px; padding: 10px; text-align: center; }
+.stat .label { font-size: 11px; color: #666; }
+.stat .val { font-size: 18px; font-weight: 700; color: #1a365d; }
+.protest-box { background: #fffbeb; border: 2px solid #f59e0b; border-radius: 12px; padding: 20px; margin-top: 20px; display: none; }
+.protest-box h3 { color: #92400e; margin-bottom: 12px; }
+.protest-val { font-size: 32px; font-weight: 800; color: #059669; }
+.protest-savings { font-size: 16px; color: #dc2626; margin-top: 4px; }
+.protest-breakdown { margin-top: 12px; font-size: 13px; color: #555; }
+.protest-breakdown .line { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dotted #ddd; }
+.protest-breakdown .line.total { font-weight: 700; border-bottom: 2px solid #333; color: #059669; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🏠 Property Tax Protest Helper</h1>
+  <p>Compare your appraised value with similar properties and draft your own protest</p>
+</div>
+<div class="container">
+  <div class="search-box">
+    <label for="countySelect">County</label>
+    <select id="countySelect" style="width:100%;padding:10px;font-size:15px;border:2px solid #ddd;border-radius:8px;margin-bottom:12px"></select>
+    <label for="searchInput">Search your property</label>
+    <input type="text" id="searchInput" placeholder="Enter address (e.g. 404 Vine St) or account number" autocomplete="off">
+    <div class="search-hint">Type at least 3 characters to search</div>
+    <div class="results" id="searchResults"></div>
+  </div>
+  <div class="loading" id="loading" style="text-align:center;padding:40px;color:#999;display:none">
+    <div style="display:inline-block;width:30px;height:30px;border:3px solid #ddd;border-top-color:#2563eb;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+    <p style="margin-top:12px">Finding your property and comparable properties...</p>
+  </div>
+  <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+
+  <!-- Property Card -->
+  <div class="card" id="propertyCard">
+    <h2 id="propAddress">—</h2>
+    <div style="margin-bottom:12px">
+      <span>Account: <strong id="propAccount">—</strong></span>
+      <span style="margin-left:16px">Homestead: <span id="propHomestead" class="badge">—</span></span>
+      <a id="propMap" target="_blank" rel="noopener" style="margin-left:16px;display:none">View on map</a>
+    </div>
+    <div class="prop-grid">
+      <div class="prop-item"><div class="label">Appraised Value</div><div class="value" id="propValue">—</div></div>
+      <div class="prop-item"><div class="label">Bedrooms</div><div class="value" id="propBeds">—</div></div>
+      <div class="prop-item"><div class="label">Bathrooms</div><div class="value" id="propBaths">—</div></div>
+      <div class="prop-item"><div class="label">Living SqFt</div><div class="value" id="propSqft">—</div></div>
+      <div class="prop-item"><div class="label">Lot SqFt</div><div class="value" id="propLot">—</div></div>
+      <div class="prop-item"><div class="label">Year Built</div><div class="value" id="propYear">—</div></div>
+      <div class="prop-item"><div class="label">$/SqFt</div><div class="value" id="propPpsf">—</div></div>
+      <div class="prop-item" id="priorItem" style="display:none"><div class="label" id="priorLabel">Prior-Year Market</div><div class="value" id="propPrior" style="font-size:17px">—</div></div>
+      <div class="prop-item"><div class="label">Deed Date</div><div class="value" id="propSold" style="font-size:15px">—</div></div>
+    </div>
+  </div>
+
+  <!-- Equity analysis (§42.26(a)(3)) -->
+  <div class="card" id="equityCard">
+    <h2>⚖️ Comparable Homes, Adjusted to Yours</h2>
+    <p id="equityLabel" style="color:#777;font-size:13px;margin-bottom:10px"></p>
+    <div class="stats-row" id="equityStats"></div>
+    <div style="max-height:420px;overflow:auto">
+      <table><thead><tr><th>Address</th><th>Miles</th><th>SqFt</th><th>Year</th><th>Appraised</th><th>Size adj.</th><th>Age adj.</th><th>Land adj.</th><th>Adjusted</th></tr></thead><tbody id="equityTable"></tbody></table>
+    </div>
+    <p id="equityMethod" style="color:#777;font-size:12px;margin-top:8px"></p>
+  </div>
+
+  <!-- Property Disclosures -->
+  <div class="card" id="disclosureCard" style="display:none">
+    <h2>📋 Property Disclosures &amp; Adjustments</h2>
+    <p style="color:#777;font-size:13px;margin-bottom:16px">Document property-specific issues that affect value. Repair costs with estimates are deducted from the recommended protest value.</p>
+
+    <h3>🏚️ Age &amp; Condition Concerns</h3>
+    <div style="margin-bottom:16px">
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="age" value="Roof nearing end of life (15+ years)"> Roof nearing end of life (15+ years)</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="age" value="HVAC system needs replacement"> HVAC system needs replacement</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="age" value="Foundation issues (cracks, settling)"> Foundation issues (cracks, settling)</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="age" value="Plumbing needs significant repair"> Plumbing needs significant repair</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="age" value="Electrical system outdated"> Electrical system outdated</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="age" value="Windows need replacement"> Windows need replacement</label>
+      </div>
+    </div>
+
+    <h3>🔧 Ongoing Maintenance / Repairs Needed</h3>
+    <div style="margin-bottom:16px">
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="maint" value="Water damage / mold remediation needed"> Water damage / mold remediation needed</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="maint" value="Fence damaged or missing"> Fence damaged or missing</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="maint" value="Driveway / walkway deterioration"> Driveway / walkway deterioration</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="maint" value="Pest / termite damage"> Pest / termite damage</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="maint" value="Pool/spa needs repair"> Pool/spa needs repair</label>
+      </div>
+    </div>
+
+    <h3>🏗️ External Factors</h3>
+    <div style="margin-bottom:16px">
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="ext" value="Data center construction nearby"> Data center construction nearby</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="ext" value="Commercial development adjacent to property"> Commercial development adjacent to property</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="ext" value="Highway / road noise"> Highway / road noise</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="ext" value="Power lines / utility easement on property"> Power lines / utility easement on property</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="ext" value="Flood zone / drainage issues"> Flood zone / drainage issues</label>
+      </div>
+      <div class="disc-row">
+        <label><input type="checkbox" class="disc-check" data-cat="ext" value="Increased traffic from nearby development"> Increased traffic from nearby development</label>
+      </div>
+    </div>
+
+    <div style="margin-top:8px">
+      <label style="font-size:13px;color:#555">Other (describe):</label>
+      <textarea id="discOther" rows="2" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:13px;margin-top:4px;resize:vertical" placeholder="Describe any other issues affecting property value..."></textarea>
+    </div>
+
+    <h3 style="margin-top:24px">💰 Verified Repair Costs</h3>
+    <p style="color:#777;font-size:12px;margin-bottom:10px">Enter documented repair estimates. These amounts will be deducted from the median market price in your protest recommendation.</p>
+    <div id="repairList"></div>
+    <button onclick="addRepairRow()" style="margin-top:8px;padding:8px 16px;background:#2563eb;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px">+ Add Repair Cost</button>
+
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid #eee">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:600;color:#555">Total Repair Deductions:</span>
+        <span style="font-size:22px;font-weight:800;color:#dc2626" id="totalRepairs">$0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Neighborhood Comps -->
+  <div class="card" id="nbhdCard">
+    <h2>📍 Neighborhood — Recently Sold Properties (Appraised Value)</h2>
+    <p id="nbhdLabel" style="color:#777;font-size:13px;margin-bottom:10px"></p>
+    <div class="stats-row" id="nbhdStats"></div>
+    <div style="max-height:350px;overflow-y:auto">
+      <table><thead><tr><th>Address</th><th>Deed Date</th><th>Appraised</th><th>Bed</th><th>Bath</th><th>SqFt</th><th>Lot</th><th>Year</th><th>$/SF</th></tr></thead><tbody id="nbhdTable"></tbody></table>
+    </div>
+  </div>
+
+  <!-- Zip Comps -->
+  <div class="card" id="zipCard">
+    <h2>📊 ZIP Code — Similar Recently Sold Properties (Appraised Value)</h2>
+    <p id="zipLabel" style="color:#777;font-size:13px;margin-bottom:10px"></p>
+    <div class="stats-row" id="zipStats"></div>
+    <div style="max-height:400px;overflow-y:auto">
+      <table><thead><tr><th>Address</th><th>Deed Date</th><th>Appraised</th><th>Bed</th><th>Bath</th><th>SqFt</th><th>Lot</th><th>Year</th><th>$/SF</th></tr></thead><tbody id="zipTable"></tbody></table>
+    </div>
+  </div>
+
+  <!-- Protest Recommendation -->
+  <div class="protest-box" id="protestBox">
+    <h3>⚖️ Protest Recommendation</h3>
+    <p>Based on the appraised values of comparable properties and the repair costs you entered:</p>
+    <div class="protest-val" id="protestValue">—</div>
+    <div class="protest-savings" id="protestSavings">—</div>
+    <div class="protest-breakdown" id="protestBreakdown"></div>
+    <p style="margin-top:12px;font-size:13px;color:#666" id="protestExplain"></p>
+    <div id="protestDisclosures" style="margin-top:12px;font-size:13px;display:none">
+      <strong style="color:#92400e">Documented Property Issues:</strong>
+      <ul id="protestDiscList" style="margin:6px 0 0 18px;color:#555"></ul>
+    </div>
+    <div style="margin-top:16px">
+      <label for="ownerName" style="font-size:13px;color:#555">Your name (printed on the letter; not stored or sent anywhere)</label>
+      <input type="text" id="ownerName" autocomplete="name" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin-top:4px">
+    </div>
+    <div style="margin-top:20px;text-align:center">
+      <button id="downloadBtn" onclick="downloadProtest()" style="padding:14px 32px;background:linear-gradient(135deg,#059669,#047857);color:white;border:none;border-radius:8px;cursor:pointer;font-size:16px;font-weight:700;box-shadow:0 4px 12px rgba(5,150,105,0.3);transition:transform 0.15s">📄 Download Protest Letter (PDF)</button>
+      <p id="downloadMsg" style="margin-top:6px;font-size:12px;color:#888">Sign it, attach any repair estimates, and file it with your appraisal district.</p>
+    </div>
+    <div style="margin-top:18px;padding-top:12px;border-top:1px solid #f3d27a;font-size:13px;color:#555">
+      <strong style="color:#92400e">Before you file</strong>
+      <ul style="margin:6px 0 0 18px">
+        <li>File by <strong>May 15</strong>, or 30 days after your appraisal notice was delivered, whichever is later (Texas Tax Code §41.44). You can file online through <a id="protestLink" target="_blank" rel="noopener">your appraisal district</a>.</li>
+        <li>Ask the appraisal district for a copy of the evidence it plans to use at your hearing (Texas Tax Code §41.461). It must make that evidence available to you at least 14 days before the hearing.</li>
+        <li>Bring this letter and your attachments to the hearing; you can also present them at an informal review first.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- All Similar -->
+  <div class="card" id="allCard">
+    <h2>🏘️ All Similar Properties in ZIP (Current Appraisals)</h2>
+    <p id="allLabel" style="color:#777;font-size:13px;margin-bottom:10px"></p>
+    <div class="stats-row" id="allStats"></div>
+  </div>
+</div>
+
+<div class="footer" style="text-align:center;padding:30px;color:#999;font-size:13px">
+  <span id="dataSource">Data source: county appraisal district rolls.</span><br>
+  Values shown are <strong>appraised values</strong>, not sale prices; Texas does not publish sale prices.<br>
+  This is a free self-help tool. You file your own protest. Not legal or appraisal advice.
+</div>
+
+<style>
+.disc-row { padding: 6px 0; }
+.disc-row label { font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.disc-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: #2563eb; flex-shrink: 0; }
+.repair-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+.repair-row input[type="text"] { flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+.repair-row input[type="number"] { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+.repair-row button { background: #fee2e2; color: #991b1b; border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer; font-size: 13px; }
+.repair-row button:hover { background: #fca5a5; }
+@media (max-width: 600px) {
+  .header h1 { font-size: 22px; }
+  .prop-grid { grid-template-columns: repeat(2, 1fr); }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  table { font-size: 11px; }
+  .repair-row { flex-wrap: wrap; }
+}
+</style>
+
+<script src="js/engine.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const fmt = n => '$' + Math.round(n).toLocaleString();
+const fmtSigned = n => (n > 0 ? '+' : n < 0 ? '−' : '') + fmt(Math.abs(n));
+// Escape any DB- or user-supplied text before it goes into HTML.
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+const bathStr = (full, half) => full == null ? '—' : (half ? full + 'F/' + half + 'H' : String(full));
+const addrOf = p => p.street_num + ' ' + p.street_name;
+let debounce;
+let _counties = {};
+let _county = null;
+let _engine = null;     // ProtestEngine.County for the selected county (site/js/engine.js)
+let _engineReady = null;
+
+// Static data root written by pipeline/export_static.py.
+function fetchJSON(path) {
+  return fetch('data/' + path).then(r => { if (!r.ok) throw new Error('Could not load ' + path); return r.json(); });
+}
+let _compsData = null;
+let _equity = null;
+let _baseMedian = 0;
+
+// Counties
+fetchJSON('counties.json').then(list => {
+  list.forEach(c => { c.available = true; });
+  const sel = $('countySelect');
+  list.forEach(c => {
+    _counties[c.id] = c;
+    const o = document.createElement('option');
+    o.value = c.id;
+    o.textContent = c.name + (c.available ? '' : ' (coming soon)');
+    o.disabled = !c.available;
+    sel.appendChild(o);
+  });
+  const first = list.find(c => c.available);
+  if (first) { sel.value = first.id; setCounty(first.id); }
+});
+$('countySelect').addEventListener('change', function() { setCounty(this.value); });
+
+function setCounty(id) {
+  _county = _counties[id];
+  _engine = new ProtestEngine.County(id, fetchJSON);
+  _engineReady = _engine.init();
+  $('dataSource').textContent = 'Data source: ' + _county.cad_name + ', ' + _county.tax_year + ' appraisal roll.';
+  $('searchInput').value = '';
+  $('searchResults').style.display = 'none';
+  $('searchResults').innerHTML = '';
+  ['propertyCard','equityCard','nbhdCard','zipCard','allCard','protestBox','disclosureCard'].forEach(id => $(id).style.display = 'none');
+  $('protestLink').href = _county.protest_url;
+}
+
+
+// Search
+$('searchInput').addEventListener('input', function() {
+  clearTimeout(debounce);
+  const q = this.value.trim();
+  if (q.length < 3 || !_county) { $('searchResults').style.display = 'none'; return; }
+  debounce = setTimeout(() => {
+    _engineReady.then(() => _engine.search(q)).then(data => {
+      const el = $('searchResults');
+      if (!data.length) { el.style.display = 'none'; return; }
+      el.innerHTML = data.map(r =>
+        '<div class="item" data-account="' + esc(r.account) + '" data-area="' + esc(r.area) + '">' +
+          '<div class="addr">' + esc(addrOf(r) + ', ' + r.city + ' ' + r.zip) + '</div>' +
+          '<div class="detail">' + fmt(num(r.appraised_val)) + ' · ' + esc(r.beds ?? '?') + 'bd/' +
+            esc(bathStr(r.full_baths, r.half_baths)) + 'ba · ' + esc(r.living_sqft ?? '?') + ' sqft · Built ' + esc(r.year_built ?? '?') + '</div>' +
+        '</div>').join('');
+      el.style.display = 'block';
+    });
+  }, 300);
+});
+$('searchResults').addEventListener('click', function(e) {
+  const item = e.target.closest('.item');
+  if (item) selectProperty(item.dataset.account, item.dataset.area);
+});
+
+function selectProperty(account, area) {
+  $('searchResults').style.display = 'none';
+  $('searchResults').innerHTML = '';
+  ['propertyCard','equityCard','nbhdCard','zipCard','allCard','protestBox','disclosureCard'].forEach(id => $(id).style.display = 'none');
+  $('loading').style.display = 'block';
+  document.querySelectorAll('.disc-check').forEach(cb => cb.checked = false);
+  $('discOther').value = '';
+  $('repairList').innerHTML = '';
+  $('totalRepairs').textContent = '$0';
+
+  _engineReady.then(() => _engine.property(account, area)).then(prop => {
+    if (!prop) throw new Error('Property not found.');
+    return Promise.all([prop, _engine.findComps(prop, _county.tax_year), _engine.equity(prop)]);
+  }).then(([prop, comps, eq]) => {
+    $('loading').style.display = 'none';
+    _compsData = comps;
+    _equity = eq;
+    renderProperty(prop);
+    renderEquity(prop, eq);
+    renderComps(prop, comps);
+    $('disclosureCard').style.display = 'block';
+  }).catch(err => {
+    $('loading').style.display = 'none';
+    $('searchResults').innerHTML = '<div class="item">' + esc(err.message) + ' Please try again.</div>';
+    $('searchResults').style.display = 'block';
+  });
+}
+
+function renderProperty(p) {
+  const val = num(p.appraised_val);
+  const sqft = num(p.living_sqft);
+  $('propAddress').textContent = addrOf(p) + ', ' + p.city + ' ' + p.zip;
+  $('searchInput').value = addrOf(p);
+  $('propAccount').textContent = p.account;
+  $('propValue').textContent = fmt(val);
+  $('propBeds').textContent = p.beds ?? '—';
+  $('propBaths').textContent = bathStr(p.full_baths, p.half_baths);
+  $('propSqft').textContent = sqft ? sqft.toLocaleString() : '—';
+  $('propLot').textContent = p.lot_sqft ? Math.round(p.lot_sqft).toLocaleString() : '—';
+  $('propYear').textContent = p.year_built || '—';
+  $('propPpsf').textContent = sqft > 0 ? fmt(val / sqft) : '—';
+  $('propSold').textContent = p.deed_date || '—';
+  // Market value change from the prior year's roll, when the county publishes it.
+  if (p.prior_market_val && p.market_val) {
+    const pct = (p.market_val - p.prior_market_val) / p.prior_market_val * 100;
+    $('priorLabel').textContent = (_county.tax_year - 1) + ' Market Value';
+    $('propPrior').textContent = fmt(p.prior_market_val) + ' (' + (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%)';
+    $('priorItem').style.display = 'block';
+  } else {
+    $('priorItem').style.display = 'none';
+  }
+  const map = $('propMap');
+  if (p.lat != null && p.lon != null) {
+    map.href = 'https://www.openstreetmap.org/?mlat=' + p.lat + '&mlon=' + p.lon + '#map=18/' + p.lat + '/' + p.lon;
+    map.style.display = 'inline';
+  } else {
+    map.style.display = 'none';
+  }
+  const hs = $('propHomestead');
+  if (p.homestead) { hs.textContent = 'Yes ✓'; hs.className = 'badge yes'; }
+  else { hs.textContent = 'No'; hs.className = 'badge no'; }
+  $('propertyCard').style.display = 'block';
+  window._prop = p;
+}
+
+function renderEquity(prop, eq) {
+  const val = num(prop.appraised_val);
+  if (!eq.comps || !eq.comps.length) { $('equityCard').style.display = 'none'; return; }
+  const c = eq.criteria, p = eq.params;
+  const yearKey = c.year_basis.startsWith('effective') ? 'eff_year_built' : 'year_built';
+  const where = eq.search.method === 'radius' ? 'within ' + eq.search.radius_mi + ' mi' : 'in neighborhood ' + eq.search.nbhd;
+  $('equityLabel').textContent = (eq.available ? eq.count + ' most similar homes ' : 'Only ' + eq.comps.length + ' similar homes ') + where +
+    ': same property category' + (c.quality ? ', quality grade ' + c.quality : '') + (c.condition ? ', condition ' + c.condition : '') + ', ' +
+    c.sqft_low.toLocaleString() + '–' + c.sqft_high.toLocaleString() + ' sq ft, ' + c.year_basis + ' ' + c.year_low + '–' + c.year_high + '.' +
+    (eq.available ? '' : ' Not enough for an adjusted comparison (' + p.min_comps + ' needed).');
+  const sign = n => (n > 0 ? '+' : n < 0 ? '−' : '') + '$' + Math.abs(n).toLocaleString();
+  $('equityTable').innerHTML =
+    '<tr style="background:#e8f5e9;font-weight:600"><td>' + esc(addrOf(prop)) + ' (you)</td><td></td><td>' + num(prop.living_sqft).toLocaleString() +
+    '</td><td>' + esc(prop[yearKey] || '') + '</td><td>' + fmt(val) + '</td><td></td><td></td><td></td><td></td></tr>' +
+    eq.comps.map(r => '<tr><td>' + esc(r.address) + '</td><td>' + (r.distance_mi == null ? '' : r.distance_mi.toFixed(2)) + '</td><td>' +
+      num(r.living_sqft).toLocaleString() + '</td><td>' + esc(r[yearKey] || '') + '</td><td>' + fmt(r.appraised_val) + '</td><td>' +
+      sign(r.size_adj) + '</td><td>' + sign(r.age_adj) + '</td><td>' + sign(r.land_adj) + '</td><td><strong>' + fmt(r.adjusted_val) + '</strong></td></tr>').join('');
+  if (eq.available) {
+    const d = val - eq.median_adjusted;
+    $('equityStats').innerHTML =
+      '<div class="stat"><div class="label">Median Adjusted</div><div class="val">' + fmt(eq.median_adjusted) + '</div></div>' +
+      '<div class="stat"><div class="label">Unadjusted Median</div><div class="val">' + fmt(eq.unadjusted_median) + '</div></div>' +
+      '<div class="stat"><div class="label">You vs Median</div><div class="val" style="' + (d > 0 ? 'color:#dc2626' : 'color:#059669') + '">' + fmtSigned(d) + '</div></div>';
+  } else {
+    $('equityStats').innerHTML = '';
+  }
+  $('equityMethod').textContent = 'Each comparable is adjusted to your home: living area at its own improvement value per sq ft, age at ' +
+    (p.age_rate * 100).toFixed(1) + '% of improvement value per year, and land by the difference in land value. ' +
+    'This follows the "median appraised value of comparable properties, appropriately adjusted" test in Texas Tax Code §42.26(a)(3).';
+  $('equityCard').style.display = 'block';
+}
+
+// Plain-language description of a comparison set's criteria (shared with protest.js).
+function describeCriteria(c) {
+  const parts = [];
+  if (c.nbhd) parts.push('neighborhood code ' + c.nbhd);
+  if (c.zip) parts.push('ZIP ' + c.zip);
+  if (c.beds != null) parts.push(c.beds + ' bedrooms');
+  if (c.min_full_baths != null) parts.push('at least ' + c.min_full_baths + ' full baths');
+  if (c.full_baths != null) parts.push(c.full_baths + ' full / ' + c.half_baths + ' half baths');
+  if (c.sqft_low != null) parts.push(c.sqft_low.toLocaleString() + '–' + c.sqft_high.toLocaleString() + ' sq ft living area');
+  if (c.deed_since) parts.push('deed recorded on or after ' + c.deed_since);
+  return parts.join(', ');
+}
+
+function renderComps(prop, comps) {
+  const propVal = num(prop.appraised_val);
+  const n = comps.neighborhood, z = comps.zip, a = comps.all_similar;
+  renderTable('nbhdTable', n.comps);
+  renderStats('nbhdStats', n.stats, propVal);
+  $('nbhdLabel').textContent = n.stats.count + ' properties: ' + describeCriteria(n.criteria) + (n.truncated ? ' (table shows the first ' + n.comps.length + ')' : '');
+  $('nbhdCard').style.display = n.comps.length ? 'block' : 'none';
+  renderTable('zipTable', z.comps);
+  renderStats('zipStats', z.stats, propVal);
+  $('zipLabel').textContent = z.stats.count + ' properties: ' + describeCriteria(z.criteria) + (z.truncated ? ' (table shows the first ' + z.comps.length + ')' : '');
+  $('zipCard').style.display = z.comps.length ? 'block' : 'none';
+  renderStats('allStats', a.stats, propVal);
+  $('allLabel').textContent = a.stats.count + ' properties on the current roll: ' + describeCriteria(a.criteria);
+  $('allCard').style.display = a.stats.count ? 'block' : 'none';
+  updateProtest();
+}
+
+function renderTable(id, rows) {
+  $(id).innerHTML = rows.map(r => {
+    const v = num(r.appraised_val);
+    const sf = num(r.living_sqft);
+    return '<tr><td>' + esc(r.address || '—') + '</td><td>' + esc(r.deed_date || '—') + '</td><td>' + fmt(v) +
+      '</td><td>' + esc(r.beds ?? '—') + '</td><td>' + esc(bathStr(r.full_baths, r.half_baths)) +
+      '</td><td>' + (sf ? sf.toLocaleString() : '—') + '</td><td>' + (r.lot_sqft ? Math.round(r.lot_sqft).toLocaleString() : '—') +
+      '</td><td>' + esc(r.year_built || '—') + '</td><td>' + (sf > 0 ? fmt(v / sf) : '—') + '</td></tr>';
+  }).join('');
+}
+
+function renderStats(id, stats, propVal) {
+  if (!stats.count) { $(id).innerHTML = ''; return; }
+  const diff = propVal - stats.median;
+  const diffClass = diff > 0 ? 'color:#dc2626' : 'color:#059669';
+  $(id).innerHTML =
+    '<div class="stat"><div class="label">Count</div><div class="val">' + stats.count + '</div></div>' +
+    '<div class="stat"><div class="label">Median Appraised</div><div class="val">' + fmt(stats.median) + '</div></div>' +
+    '<div class="stat"><div class="label">Average Appraised</div><div class="val">' + fmt(stats.average) + '</div></div>' +
+    '<div class="stat"><div class="label">You vs Median</div><div class="val" style="' + diffClass + '">' + fmtSigned(diff) + '</div></div>';
+}
+
+// Repair rows
+function addRepairRow() {
+  const div = document.createElement('div');
+  div.className = 'repair-row';
+  div.innerHTML = '<input type="text" placeholder="Description (e.g. Roof replacement)" class="repair-desc">' +
+    '<input type="number" placeholder="Cost ($)" class="repair-cost" min="0" step="100">' +
+    '<button type="button">✕</button>';
+  div.querySelector('button').addEventListener('click', () => { div.remove(); updateProtest(); });
+  div.querySelector('.repair-cost').addEventListener('input', updateProtest);
+  div.querySelector('.repair-desc').addEventListener('input', updateProtest);
+  $('repairList').appendChild(div);
+}
+
+function getRepairItems() {
+  const items = [];
+  document.querySelectorAll('.repair-row').forEach(row => {
+    const cost = parseFloat(row.querySelector('.repair-cost').value);
+    if (cost > 0) items.push({desc: row.querySelector('.repair-desc').value.trim() || 'Repair', cost: cost});
+  });
+  return items;
+}
+
+function getTotalRepairs() {
+  return getRepairItems().reduce((t, i) => t + i.cost, 0);
+}
+
+function getDisclosures() {
+  const items = [];
+  document.querySelectorAll('.disc-check:checked').forEach(cb => items.push(cb.value));
+  const other = $('discOther').value.trim();
+  if (other) items.push(other);
+  return items;
+}
+
+function compSets() {
+  const c = _compsData;
+  return [
+    {key: 'neighborhood', label: 'Neighborhood, recently sold', set: c.neighborhood},
+    {key: 'zip', label: 'ZIP, similar & recently sold', set: c.zip},
+    {key: 'all_similar', label: 'ZIP, all similar on roll', set: c.all_similar},
+  ].filter(s => s.set.stats.count > 0);
+}
+
+function updateProtest() {
+  if (!_compsData || !window._prop) return;
+  const propVal = num(window._prop.appraised_val);
+  const repairs = getTotalRepairs();
+  const disclosures = getDisclosures();
+
+  $('totalRepairs').textContent = fmt(repairs);
+
+  // Mirrors opinion_of_value() in app/letter.py, which builds the PDF.
+  const sets = compSets();
+  const eq = _equity || {};
+  const useEquity = !!(eq.available && eq.supports_reduction);
+  if (!useEquity && sets.length === 0) { $('protestBox').style.display = 'none'; return; }
+  _baseMedian = useEquity ? eq.median_adjusted
+    : Math.round(sets.reduce((a, s) => a + s.set.stats.median, 0) / sets.length / 1000) * 1000;
+  const recommended = _baseMedian - repairs;
+  const savings = propVal - recommended;
+
+  if (savings <= 0) { $('protestBox').style.display = 'none'; return; }
+
+  $('protestValue').textContent = fmt(recommended);
+  $('protestSavings').textContent = 'Potential reduction: ' + fmt(savings);
+
+  let bk = '<div class="line"><span>' + (useEquity ? 'Median adjusted value of ' + eq.count + ' comparable homes'
+    : 'Average of ' + sets.length + ' median appraised values') + '</span><span>' + fmt(_baseMedian) + '</span></div>';
+  getRepairItems().forEach(item => {
+    bk += '<div class="line"><span>− ' + esc(item.desc) + '</span><span style="color:#dc2626">-' + fmt(item.cost) + '</span></div>';
+  });
+  bk += '<div class="line total"><span>Suggested opinion of value</span><span>' + fmt(recommended) + '</span></div>';
+  $('protestBreakdown').innerHTML = bk;
+
+  $('protestExplain').textContent = 'You can use this as your opinion of value when filing with ' + _county.cad_name + '.' +
+    (repairs > 0 ? ' Attach your repair estimates as supporting documentation.' : '');
+
+  if (disclosures.length > 0) {
+    $('protestDiscList').innerHTML = disclosures.map(d => '<li>' + esc(d) + '</li>').join('');
+    $('protestDisclosures').style.display = 'block';
+  } else {
+    $('protestDisclosures').style.display = 'none';
+  }
+
+  $('protestBox').style.display = 'block';
+}
+
+document.addEventListener('change', function(e) {
+  if (e.target.classList.contains('disc-check')) updateProtest();
+});
+$('discOther').addEventListener('input', updateProtest);
+</script>
+<script src="js/pdf-fonts.js"></script>
+<script src="js/pdf.js"></script>
+<script src="js/download.js"></script>
+</body>
+</html>

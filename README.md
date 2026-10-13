@@ -13,6 +13,16 @@ Not legal or appraisal advice. Product decisions and the phase plan are in
 Counties: Dallas, Collin, Tarrant and Denton. Tarrant does not publish
 bedroom/bath counts, so its comparisons match on size only.
 
+## Two ways to run it
+
+- **Static site (production):** `site/` is plain HTML/JS plus JSON data; the
+  comparison, the equity analysis and the PDF letter all run in the visitor's
+  browser. No server, no database, nothing the owner types is sent anywhere.
+  Hosted on Cloudflare Pages (`.github/workflows/deploy.yml`).
+- **Flask app (reference and development):** `app/` serves the same features
+  from the county DBs and produces the PDF with reportlab. The static engine
+  (`site/js/engine.js`) is checked against it by `tests/test_static_parity.py`.
+
 ## Layout
 
 ```
@@ -23,6 +33,9 @@ counties/config.yaml per-county settings (CAD name/address, tax year, paths)
 counties/<county>/   adapter.py: raw export -> app DB
 pipeline/build_db.py build a county's app DB
 pipeline/geo.py      parcel shapefile centroids -> lat/lon (no GDAL needed)
+pipeline/export_static.py  county DBs -> site/data/ JSON (area, search and account shards)
+site/                index.html, js/engine.js (comparisons, equity, letter blocks),
+                     js/pdf.js (dependency-free PDF writer), js/download.js
 scripts/fetch_data.py      download raw county exports into data/
 scripts/query_comps.py     print a property's comparables from the command line
 tests/               pytest suite; fixtures/ holds synthetic county exports,
@@ -40,7 +53,14 @@ python scripts/fetch_data.py                   # ~3.5 GB of raw exports, all cou
 for c in dallas collin tarrant denton; do python pipeline/build_db.py $c; done
 ```
 
-## Run
+## Run the static site locally
+
+```bash
+python pipeline/export_static.py    # needs the county DBs from Setup
+cd site && python -m http.server 8000
+```
+
+## Run the Flask app
 
 ```bash
 python -m app.main                  # http://127.0.0.1:5000
@@ -75,6 +95,16 @@ regenerate and review the diff:
 ```bash
 UPDATE_GOLDEN=1 pytest tests/test_golden.py && git diff tests/golden
 ```
+
+## Deploying
+
+`.github/workflows/deploy.yml` (monthly and on demand) downloads the county
+data, builds the DBs, runs the tests, exports `site/data` and publishes
+`site/` to Cloudflare Pages. One-time setup: create a Pages project (Direct
+Upload) in Cloudflare, then add repository secrets `CLOUDFLARE_API_TOKEN`
+(Pages: Edit) and `CLOUDFLARE_ACCOUNT_ID`, and a repository variable
+`CF_PAGES_PROJECT` with the project name. Without the secrets the workflow
+still builds and checks everything but skips publishing.
 
 ## Database
 
