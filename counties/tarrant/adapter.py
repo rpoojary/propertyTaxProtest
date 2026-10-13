@@ -112,6 +112,7 @@ def build(out, cfg, log=print):
             "street_num": num, "street_name": street, "city": city, "zip": zip5,
             "state_cd": (r["Property_Class"] or "").strip(), "nbhd": a.get("nbhd"),
             "legal_desc": (r.get("LegalDescription") or "").strip() or None,
+            "confidential": 0,  # TAD's export carries no confidentiality flag
         })
         # Total_Value is the market value; TAD's Appraised_Value can carry the
         # homestead cap, so it is stored as the assessed value.

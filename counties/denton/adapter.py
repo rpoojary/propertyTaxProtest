@@ -89,6 +89,7 @@ def build(out, cfg, log=print):
             "city": r["situsCity"].strip(), "zip": r["situsZip"].strip()[:5],
             "state_cd": (r["stateCodes"] or "").split(",")[0].strip(), "nbhd": hood.get(pid),
             "legal_desc": (r.get("legalDescription") or "").strip() or None,
+            "confidential": int((r.get("confidential") or "").strip() == "1"),
         })
         land = (to_float(r["landHSValue"]) or 0) + (to_float(r["landNHSValue"]) or 0)
         out.add("valuation", {

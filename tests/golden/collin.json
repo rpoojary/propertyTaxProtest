@@ -107,6 +107,7 @@
   {
    "account": "1001",
    "city": "PLANO",
+   "confidential": 0,
    "lat": null,
    "legal_desc": "TEST ESTATES, BLK A, LOT 1",
    "lon": null,
@@ -121,6 +122,7 @@
   {
    "account": "1002",
    "city": "PLANO",
+   "confidential": 0,
    "lat": null,
    "legal_desc": "TEST ESTATES, BLK A, LOT 2",
    "lon": null,
@@ -135,6 +137,7 @@
   {
    "account": "1003",
    "city": "PLANO",
+   "confidential": 0,
    "lat": null,
    "legal_desc": "TEST ESTATES, BLK A, LOT 3",
    "lon": null,

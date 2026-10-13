@@ -96,13 +96,16 @@ def tarrant_db(tmp_path_factory):
 DENTON_HEADER = ("pYear,pid,stateCodes,situsStreetNumb,situsStreetPrefix,situsStreetName,situsStreetSuff,situsCity,"
                  "situsZip,exemptions,deedDt,deedType,instrumentNum,ownerMarketValue,ownerAppraisedValue,"
                  "ownerNetAppraisedValue,improvementValue,landHSValue,landNHSValue,imprvMainArea,imprvActualYearBuilt,"
-                 "imprvEffYearBuilt,imprvClasses,land_sqft,landTotalSqft")
+                 "imprvEffYearBuilt,imprvClasses,land_sqft,landTotalSqft,confidential")
 DENTON_HOME = ("2026,247593,A1,3004,,SOUTHMOOR,TRL,FLOWER MOUND,75022-1055,HS,2018-11-20 0:00:00,GNV,2018-137347,"
-               "820000,820000,800000,700000,120000,0,3376,2004,2010,\"1750S1,GB2\",12079.188,12080")
+               "820000,820000,800000,700000,120000,0,3376,2004,2010,\"1750S1,GB2\",12079.188,12080,0")
 DENTON_ROWS = [
     DENTON_HOME,
     DENTON_HOME,  # second owner row repeats the full value
-    '2026,8,"C1,F1",100,N,ELM,ST,DENTON,76201,"OTHER,EX-XV",,,,50,50,50,0,0,50,0,0,,,,1302',
+    '2026,8,"C1,F1",100,N,ELM,ST,DENTON,76201,"OTHER,EX-XV",,,,50,50,50,0,0,50,0,0,,,,1302,0',
+    # confidential owner (Tax Code §25.025): kept in canonical tables, never in the app
+    '2026,9,A1,3010,,SOUTHMOOR,TRL,FLOWER MOUND,75022,HS,2020-01-01,WD,X,800000,800000,800000,700000,100000,0,'
+    '3300,2004,2010,GB2,12000,12000,1',
 ]
 
 

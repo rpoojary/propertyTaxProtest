@@ -78,3 +78,9 @@ def test_canonical_detail(dallas_db):
     sql = "SELECT code FROM exemption WHERE account='S0001' ORDER BY code"
     codes = sqlite3.connect(dallas_db).execute(sql).fetchall()
     assert [c[0] for c in codes] == ["HS", "OV65"]
+
+
+def test_confidential_record_excluded(dallas_db, rows):
+    assert "C0009" not in rows  # matches every comparison set if it were included
+    flag = sqlite3.connect(dallas_db).execute("SELECT confidential FROM property WHERE account='C0009'").fetchone()
+    assert flag == (1,)

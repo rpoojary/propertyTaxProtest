@@ -78,3 +78,11 @@ def test_letter_pdf(client):
 def test_letter_refused_without_reduction(client):
     r = client.post("/api/dallas/letter/C0001", json={})  # cheapest comparable: nothing to reduce
     assert r.status_code == 422 and "No protest letter" in r.get_json()["error"]
+
+
+def test_confidential_never_served(client):
+    assert client.get("/api/dallas/property/C0009").status_code == 404
+    assert client.get("/api/dallas/search?q=106 test").get_json() == []
+    comps = client.get("/api/dallas/comps/S0001").get_json()
+    listed = {r["account"] for k in ("neighborhood", "zip") for r in comps[k]["comps"]}
+    assert "C0009" not in listed

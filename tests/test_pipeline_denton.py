@@ -36,3 +36,10 @@ def test_canonical_detail(denton_db):
     main = read_rows(denton_db, "improvement")["247593"]
     # quality is the dwelling class picked from "1750S1,GB2"
     assert (main["condition"], main["eff_year_built"], main["quality"]) == ("Good", 2010, "GB2")
+
+
+def test_confidential_record_excluded(denton_db):
+    import sqlite3
+
+    assert sqlite3.connect(denton_db).execute("SELECT confidential FROM property WHERE account='9'").fetchone() == (1,)
+    assert "9" not in read_rows(denton_db)

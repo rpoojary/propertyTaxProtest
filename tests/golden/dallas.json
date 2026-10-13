@@ -43,6 +43,12 @@
    "transfer_date": "2025-08-08"
   },
   {
+   "account": "C0009",
+   "deed_type": null,
+   "instrument": null,
+   "transfer_date": "2025-09-09"
+  },
+  {
    "account": "S0001",
    "deed_type": null,
    "instrument": null,
@@ -191,6 +197,24 @@
    "year_built": 2010
   },
   {
+   "account": "C0009",
+   "area_sqft": null,
+   "beds": 3,
+   "condition": null,
+   "description": null,
+   "eff_year_built": null,
+   "full_baths": 2,
+   "half_baths": 0,
+   "kind": "main",
+   "living_sqft": 1950.0,
+   "pool": 0,
+   "quality": null,
+   "seq": 1,
+   "stories": null,
+   "value": null,
+   "year_built": 2009
+  },
+  {
    "account": "S0001",
    "area_sqft": 400.0,
    "beds": null,
@@ -275,6 +299,7 @@
   {
    "account": "C0001",
    "city": "TESTVILLE",
+   "confidential": 0,
    "lat": null,
    "legal_desc": "TEST ADDN BLK A LOT 2",
    "lon": null,
@@ -289,6 +314,7 @@
   {
    "account": "C0002",
    "city": "TESTVILLE",
+   "confidential": 0,
    "lat": null,
    "legal_desc": null,
    "lon": null,
@@ -303,6 +329,7 @@
   {
    "account": "C0003",
    "city": "TESTVILLE",
+   "confidential": 0,
    "lat": null,
    "legal_desc": null,
    "lon": null,
@@ -317,6 +344,7 @@
   {
    "account": "C0004",
    "city": "TESTVILLE",
+   "confidential": 0,
    "lat": null,
    "legal_desc": null,
    "lon": null,
@@ -331,6 +359,7 @@
   {
    "account": "C0005",
    "city": "TESTVILLE",
+   "confidential": 0,
    "lat": null,
    "legal_desc": null,
    "lon": null,
@@ -345,6 +374,7 @@
   {
    "account": "C0006",
    "city": "TESTVILLE",
+   "confidential": 0,
    "lat": null,
    "legal_desc": null,
    "lon": null,
@@ -359,6 +389,7 @@
   {
    "account": "C0007",
    "city": "TESTVILLE",
+   "confidential": 0,
    "lat": null,
    "legal_desc": null,
    "lon": null,
@@ -373,6 +404,7 @@
   {
    "account": "C0008",
    "city": "TESTVILLE",
+   "confidential": 0,
    "lat": null,
    "legal_desc": null,
    "lon": null,
@@ -385,8 +417,24 @@
    "zip": "75001"
   },
   {
+   "account": "C0009",
+   "city": "TESTVILLE",
+   "confidential": 1,
+   "lat": null,
+   "legal_desc": null,
+   "lon": null,
+   "nbhd": "N1",
+   "parcel_id": "C0009",
+   "state_cd": "A11",
+   "street_name": "TEST ST",
+   "street_num": "106",
+   "unit": null,
+   "zip": "75000"
+  },
+  {
    "account": "S0001",
    "city": "TESTVILLE",
+   "confidential": 0,
    "lat": 32.889998,
    "legal_desc": "TEST ADDN BLK A LOT 1",
    "lon": -96.940001,
@@ -733,6 +781,15 @@
    "improvement_val": 1000.0,
    "land_val": null,
    "market_val": null,
+   "tax_year": 2026
+  },
+  {
+   "account": "C0009",
+   "appraised_val": 330000.0,
+   "assessed_val": null,
+   "improvement_val": 250000.0,
+   "land_val": 80000.0,
+   "market_val": 330000.0,
    "tax_year": 2026
   },
   {

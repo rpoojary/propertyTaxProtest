@@ -6,7 +6,9 @@ pipeline/build_db.py writes one SQLite file per county:
                     county_meta. Same columns for every county; adapters
                     fill them from each county's raw export.
   property_summary  one row per property, derived from the canonical tables
-                    by SUMMARY_SQL. The web app reads only this table.
+                    by SUMMARY_SQL. The web app reads only this table. Properties
+                    the district marks confidential (Tax Code §25.025) are left
+                    out, so they are never searchable or listed as comparables.
 
 Values are appraisal-district values. `deed` records ownership transfers;
 Texas does not publish sale prices, so there is no price column.
@@ -27,7 +29,8 @@ CREATE TABLE property (
     nbhd          TEXT,     -- neighborhood / market area code
     legal_desc    TEXT,
     lat           REAL,     -- parcel centroid, WGS84
-    lon           REAL
+    lon           REAL,
+    confidential  INTEGER NOT NULL DEFAULT 0  -- owner's address is confidential (Tax Code §25.025)
 );
 CREATE TABLE valuation (
     account         TEXT NOT NULL,
@@ -104,7 +107,8 @@ FROM property p
 JOIN valuation v ON v.account = p.account AND v.tax_year = :tax_year
 LEFT JOIN valuation prev ON prev.account = p.account AND prev.tax_year = :tax_year - 1
 LEFT JOIN main m ON m.account = p.account AND m.rn = 1
-LEFT JOIN land l ON l.account = p.account AND l.seq = 1;
+LEFT JOIN land l ON l.account = p.account AND l.seq = 1
+WHERE p.confidential = 0;  -- confidential records never reach the app
 """
 
 INDEXES = """

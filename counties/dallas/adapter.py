@@ -108,6 +108,8 @@ def build(out, cfg, log=print):
             "unit": text(r, "UNIT_ID"), "city": r["PROPERTY_CITY"].strip(),
             "zip": r["PROPERTY_ZIPCODE"].strip()[:5], "state_cd": state_cd.get(acct, ""),
             "nbhd": r["NBHD_CD"].strip(), "legal_desc": legal or None,
+            # DCAD blanks the owner of confidential accounts and sets EXCLUDE_OWNER.
+            "confidential": int((r.get("EXCLUDE_OWNER") or "").strip().upper() == "Y"),
         })
         deed = parse_date(r["DEED_TXFR_DATE"], fmt)
         if deed:

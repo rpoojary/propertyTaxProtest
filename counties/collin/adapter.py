@@ -45,6 +45,7 @@ def build(out, cfg, log=print):
                 "stories": (r.get("stories") or "").strip() or None,
                 "eff_year_built": to_int(r.get("eff_yr_blt")) or None,
                 "lot": to_float(r.get("land_sqft")) or None,
+                "confidential": (r.get("confidential_flag") or "").strip().upper() == "T",
             }
     else:
         log("  no details file; beds/baths will be empty")
@@ -64,6 +65,7 @@ def build(out, cfg, log=print):
             "city": r["situsCity"].strip(), "zip": r["situsZip"].strip()[:5],
             "state_cd": r["propCategoryCode"].strip(), "nbhd": r["nbhdCode"].strip(),
             "legal_desc": (r.get("legalDescription") or "").strip() or None,
+            "confidential": int(bool(d.get("confidential"))),
         })
         out.add("valuation", {"account": acct, "tax_year": to_int(r.get("currValYear")) or year, **val(r, "currVal")})
         prev_year = to_int(r.get("prevValYear"))

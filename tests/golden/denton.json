@@ -5,6 +5,12 @@
    "deed_type": "GNV",
    "instrument": "2018-137347",
    "transfer_date": "2018-11-20"
+  },
+  {
+   "account": "9",
+   "deed_type": "WD",
+   "instrument": "X",
+   "transfer_date": "2020-01-01"
   }
  ],
  "exemption": [
@@ -23,6 +29,12 @@
   {
    "account": "8",
    "code": "OTHER",
+   "description": null,
+   "tax_year": 2026
+  },
+  {
+   "account": "9",
+   "code": "HS",
    "description": null,
    "tax_year": 2026
   }
@@ -63,6 +75,24 @@
    "stories": null,
    "value": null,
    "year_built": null
+  },
+  {
+   "account": "9",
+   "area_sqft": null,
+   "beds": null,
+   "condition": null,
+   "description": null,
+   "eff_year_built": 2010,
+   "full_baths": null,
+   "half_baths": null,
+   "kind": "main",
+   "living_sqft": 3300.0,
+   "pool": null,
+   "quality": "GB2",
+   "seq": 1,
+   "stories": null,
+   "value": null,
+   "year_built": 2004
   }
  ],
  "land": [
@@ -77,12 +107,19 @@
    "seq": 1,
    "size_sqft": 1302.0,
    "value": 50.0
+  },
+  {
+   "account": "9",
+   "seq": 1,
+   "size_sqft": 12000.0,
+   "value": 100000.0
   }
  ],
  "property": [
   {
    "account": "247593",
    "city": "FLOWER MOUND",
+   "confidential": 0,
    "lat": null,
    "legal_desc": null,
    "lon": null,
@@ -97,6 +134,7 @@
   {
    "account": "8",
    "city": "DENTON",
+   "confidential": 0,
    "lat": null,
    "legal_desc": null,
    "lon": null,
@@ -107,6 +145,21 @@
    "street_num": "100",
    "unit": null,
    "zip": "76201"
+  },
+  {
+   "account": "9",
+   "city": "FLOWER MOUND",
+   "confidential": 1,
+   "lat": null,
+   "legal_desc": null,
+   "lon": null,
+   "nbhd": null,
+   "parcel_id": "9",
+   "state_cd": "A1",
+   "street_name": "SOUTHMOOR TRL",
+   "street_num": "3010",
+   "unit": null,
+   "zip": "75022"
   }
  ],
  "property_summary": [
@@ -184,6 +237,15 @@
    "improvement_val": 0.0,
    "land_val": 50.0,
    "market_val": 50.0,
+   "tax_year": 2026
+  },
+  {
+   "account": "9",
+   "appraised_val": 800000.0,
+   "assessed_val": 800000.0,
+   "improvement_val": 700000.0,
+   "land_val": 100000.0,
+   "market_val": 800000.0,
    "tax_year": 2026
   }
  ]

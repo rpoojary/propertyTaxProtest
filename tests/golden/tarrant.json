@@ -71,6 +71,7 @@
   {
    "account": "1309",
    "city": "FORT WORTH",
+   "confidential": 0,
    "lat": null,
    "legal_desc": null,
    "lon": null,
@@ -85,6 +86,7 @@
   {
    "account": "6483",
    "city": null,
+   "confidential": 0,
    "lat": null,
    "legal_desc": null,
    "lon": null,
