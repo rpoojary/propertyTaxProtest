@@ -52,7 +52,7 @@ def get_property(db, account):
 
 def _query(db, where, params):
     rows = db.execute(
-        f"SELECT {ROW_FIELDS} FROM property_summary WHERE {' AND '.join(where)} ORDER BY appraised_val",
+        f"SELECT {ROW_FIELDS} FROM property_summary WHERE {' AND '.join(where)} ORDER BY appraised_val, account",
         params).fetchall()
     return [dict(r) for r in rows]
 
@@ -99,7 +99,8 @@ def find_comps(db, subject, tax_year):
         where += ["beds = ?", "full_baths >= ?"]
         params += [beds, full]
         crit.update(beds=beds, min_full_baths=full)
-    zip_rows = _query(db, where, params) if sqft or has_rooms else []
+    has_zip = bool(subject.get("zip"))  # a blank ZIP is not a ZIP: no ZIP sets
+    zip_rows = _query(db, where, params) if has_zip and (sqft or has_rooms) else []
     zip_set = _result(crit, zip_rows)
 
     # 3. Same ZIP, same size band and rooms, regardless of transfer date.
@@ -113,7 +114,7 @@ def find_comps(db, subject, tax_year):
         where += ["beds = ?", "full_baths = ?", "coalesce(half_baths, 0) = ?"]
         params += [beds, full, half or 0]
         crit.update(beds=beds, full_baths=full, half_baths=half or 0)
-    all_rows = _query(db, where, params) if sqft or has_rooms else []
+    all_rows = _query(db, where, params) if has_zip and (sqft or has_rooms) else []
     all_similar = _result(crit, all_rows, include_rows=False)
 
     return {"neighborhood": neighborhood, "zip": zip_set, "all_similar": all_similar}

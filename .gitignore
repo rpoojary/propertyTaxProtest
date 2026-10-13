@@ -4,3 +4,4 @@ data/
 *.db-wal
 *.part
 __pycache__/
+site/data/

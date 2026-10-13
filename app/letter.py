@@ -2,7 +2,8 @@
 
 Every statement comes from the equity analysis, the comparison sets, the
 county config, or what the owner typed (name, conditions, repair costs).
-Owner text is escaped before it reaches reportlab's markup parser.
+build() returns plain blocks; render_pdf() escapes all text before it
+reaches reportlab's markup parser.
 """
 import io
 from datetime import date
@@ -54,19 +55,24 @@ def opinion_of_value(subject, equity, sets, repair_total):
 
 
 def build(cfg, subject, equity, sets, owner, today=None):
-    """Structured letter content (also used by tests)."""
+    """Letter content as renderer-neutral blocks (static/js/engine.js builds the same list).
+
+    Block types: {"t": "title"|"small"|"h2", "text"}, {"t": "p", "runs": [[text, bold], ...]},
+    {"t": "table", "rows", "widths" (inches), "highlight" (row indexes)}, {"t": "space", "h" (points)}.
+    """
     repair_total = sum(r["cost"] for r in owner["repairs"])
     op = opinion_of_value(subject, equity, sets, repair_total)
-    val = subject["appraised_val"]
-    street = f"{subject['street_num']} {subject['street_name']}".strip()
-    addr = ", ".join(x for x in (street, subject.get("city"), f"TX {subject.get('zip') or ''}".strip()) if x)
+    s, c, eq, val = subject, cfg, equity, subject["appraised_val"]
+    street = f"{s['street_num']} {s['street_name']}".strip()
+    addr = ", ".join(x for x in (street, s.get("city"), f"TX {s.get('zip') or ''}".strip()) if x)
+
     grounds = []
-    if equity.get("available") and equity.get("supports_reduction"):
+    if eq.get("available") and eq.get("supports_reduction"):
         grounds.append(
             f"Unequal appraisal (Texas Tax Code §41.41(a)(2), §42.26(a)(3)): my appraised value of {money(val)} "
-            f"exceeds the median appraised value of {equity['count']} comparable properties, appropriately "
-            f"adjusted, which is {money(equity['median_adjusted'])}.")
-    above = [k for k, s in sets.items() if s["stats"]["count"] and val > s["stats"]["median"]]
+            f"exceeds the median appraised value of {eq['count']} comparable properties, appropriately "
+            f"adjusted, which is {money(eq['median_adjusted'])}.")
+    above = [k for k in SET_TITLES if sets[k]["stats"]["count"] and val > sets[k]["stats"]["median"]]
     if above and not grounds:
         grounds.append(
             "Unequal appraisal (Texas Tax Code §41.41(a)(2)): my appraised value is higher than the median "
@@ -77,154 +83,171 @@ def build(cfg, subject, equity, sets, owner, today=None):
         grounds.append("Property-specific conditions, described below.")
     if repair_total:
         grounds.append(f"Repair costs totaling {money(repair_total)}, based on the estimates listed below.")
-    return {
-        "date": (today or date.today()).strftime("%B %d, %Y").replace(" 0", " "),
-        "cfg": cfg, "subject": subject, "address": addr, "owner": owner,
-        "equity": equity, "sets": sets, "opinion": op, "repair_total": repair_total, "grounds": grounds,
-    }
 
+    def p(*runs):
+        return {"t": "p", "runs": [[r, False] if isinstance(r, str) else list(r) for r in runs]}
 
-def render_pdf(content):
-    """PDF bytes for build() output."""
-    from reportlab.lib import colors
-    from reportlab.lib.pagesizes import LETTER
-    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-    from reportlab.lib.units import inch
-    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+    blocks = [
+        {"t": "title", "text": "Property Tax Protest"},
+        {"t": "small", "text": f"{c['tax_year']} Appraisal Year · {c['cad_name']}\n"
+                               f"{(today or date.today()).strftime('%B %d, %Y').replace(' 0', ' ')}"},
+        {"t": "space", "h": 8},
+        p(("To:", True), f" Appraisal Review Board, {c['cad_name']}, {c['cad_address']}"),
+        p(("From:", True), f" {owner['name']}\n", ("Re:", True), f" Account {s['account']}, {addr}"),
+        {"t": "space", "h": 6},
+        p("Dear Members of the Appraisal Review Board,"),
+        p(f"I am protesting the {c['tax_year']} appraised value of ", (money(val), True),
+          f" for my property at {addr} and request that it be reduced to ", (money(op["requested"]), True),
+          f", a reduction of {money(op['reduction'])} ({op['reduction'] / val * 100:.1f}%)."),
+        p("This protest is based on the following grounds:"),
+    ]
+    blocks += [p(f"{i}. {g}") for i, g in enumerate(grounds, 1)]
 
-    c, s, eq, op = content["cfg"], content["subject"], content["equity"], content["opinion"]
-    val = s["appraised_val"]
-    ss = getSampleStyleSheet()
-    body = ParagraphStyle("body", parent=ss["BodyText"], fontName="Times-Roman", fontSize=10.5, leading=14)
-    small = ParagraphStyle("small", parent=body, fontSize=8, leading=10, textColor=colors.HexColor("#555555"))
-    h1 = ParagraphStyle("h1", parent=ss["Title"], fontName="Times-Bold", fontSize=17)
-    h2 = ParagraphStyle("h2", parent=ss["Heading2"], fontName="Times-Bold", fontSize=12, spaceBefore=10)
-    cell = ParagraphStyle("cell", parent=body, fontName="Helvetica", fontSize=7, leading=8.5)
-
-    def p(text, style=body):
-        return Paragraph(text, style)
-
-    def e(text):
-        return escape(str(text))
-
-    def grid(rows, widths, header_rows=1, bold_rows=()):
-        t = Table([[p(x, cell) if isinstance(x, str) else x for x in r] for r in rows], colWidths=widths,
-                  repeatRows=header_rows)
-        style = [("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#999999")),
-                 ("BACKGROUND", (0, 0), (-1, header_rows - 1), colors.HexColor("#e8edf3")),
-                 ("VALIGN", (0, 0), (-1, -1), "TOP")]
-        style += [("BACKGROUND", (0, i), (-1, i), colors.HexColor("#e8f5e9")) for i in bold_rows]
-        t.setStyle(TableStyle(style))
-        return t
-
-    story = [p("Property Tax Protest", h1),
-             p(f"{c['tax_year']} Appraisal Year · {e(c['cad_name'])}<br/>{content['date']}", small), Spacer(1, 8),
-             p(f"<b>To:</b> Appraisal Review Board, {e(c['cad_name'])}, {e(c['cad_address'])}"),
-             p(f"<b>From:</b> {e(content['owner']['name'])}<br/><b>Re:</b> Account {e(s['account'])}, "
-               f"{e(content['address'])}"),
-             Spacer(1, 6),
-             p("Dear Members of the Appraisal Review Board,"),
-             p(f"I am protesting the {c['tax_year']} appraised value of <b>{money(val)}</b> for my property at "
-               f"{e(content['address'])} and request that it be reduced to <b>{money(op['requested'])}</b>, "
-               f"a reduction of {money(op['reduction'])} ({op['reduction'] / val * 100:.1f}%)."),
-             p("This protest is based on the following grounds:")]
-    story += [p(f"{i}. {e(g)}") for i, g in enumerate(content["grounds"], 1)]
-
-    story.append(p("Subject property", h2))
     yr = s.get("year_built") or "—"
     eff = f" (effective {s['eff_year_built']})" if s.get("eff_year_built") else ""
     rooms = f"{s['beds']} bedrooms, " if s.get("beds") is not None else ""
     baths = ""
     if s.get("full_baths") is not None:
         baths = f"{s['full_baths']} full / {s.get('half_baths') or 0} half baths, "
-    story.append(p(
-        f"Account {e(s['account'])}. {rooms}{baths}{s['living_sqft']:,.0f} sq ft living area, built {yr}{eff}"
-        + (f", quality {e(s['quality'])}" if s.get("quality") else "")
-        + (f", lot {s['lot_sqft']:,.0f} sq ft" if s.get("lot_sqft") else "")
-        + f". Appraised at {money(val)}: improvements {money(s['improvement_val'] or 0)}, "
-          f"land {money(s['land_val'] or 0)}."))
-    story.append(p(f"<i>All values are appraised values from the {e(c['cad_name'])} {c['tax_year']} appraisal "
-                   "roll, not sale prices.</i>", small))
+    blocks += [
+        {"t": "h2", "text": "Subject property"},
+        p(f"Account {s['account']}. {rooms}{baths}"
+          + (f"{s['living_sqft']:,.0f} sq ft living area" if s.get("living_sqft") else "living area not recorded")
+          + f", built {yr}{eff}"
+          + (f", quality {s['quality']}" if s.get("quality") else "")
+          + (f", lot {s['lot_sqft']:,.0f} sq ft" if s.get("lot_sqft") else "")
+          + f". Appraised at {money(val)}: improvements {money(s['improvement_val'] or 0)}, "
+            f"land {money(s['land_val'] or 0)}."),
+        {"t": "small", "text": f"All values are appraised values from the {c['cad_name']} {c['tax_year']} "
+                               "appraisal roll, not sale prices."},
+    ]
 
     n = 1
     if eq.get("available"):
         cr, prm = eq["criteria"], eq["params"]
         radius = eq["search"].get("radius_mi")
         where = (f"within {radius:g} {'mile' if radius == 1 else 'miles'} of my property"
-                 if eq["search"]["method"] == "radius" else f"in neighborhood {e(eq['search'].get('nbhd'))}")
-        grades = [f"quality grade ({e(cr['quality'])})" if cr.get("quality") else "",
-                  f"condition rating ({e(cr['condition'])})" if cr.get("condition") else ""]
-        grades = " and ".join(g for g in grades if g)
-        story.append(p(f"Evidence {n}: Comparable properties, appropriately adjusted", h2))
-        story.append(p(
-            f"I selected the {eq['count']} most similar properties {where} in the same property category"
-            + (f" and the same {grades}" if grades else "")
-            + f", with {cr['sqft_low']:,}–{cr['sqft_high']:,} sq ft of living area and {cr['year_basis']} between "
-            f"{cr['year_low']} and {cr['year_high']}. Each comparable's appraised value is adjusted to my property: "
-            "living area at the comparable's own improvement value per square foot; age at "
-            f"{prm['age_rate'] * 100:.1f}% of its improvement value per year of difference; land by the difference "
-            "in appraised land value."))
-        rows = [["Address", "Miles", "Sq ft", "Year", "Appraised", "Size adj.", "Age adj.", "Land adj.", "Adjusted"]]
+                 if eq["search"]["method"] == "radius" else f"in neighborhood {eq['search'].get('nbhd')}")
+        grades = " and ".join(g for g in (f"quality grade ({cr['quality']})" if cr.get("quality") else "",
+                                          f"condition rating ({cr['condition']})" if cr.get("condition") else "") if g)
         year_key = "eff_year_built" if cr["year_basis"].startswith("effective") else "year_built"
-        rows.append([f"<b>{e(s['street_num'])} {e(s['street_name'])} (subject)</b>", "", f"{s['living_sqft']:,.0f}",
-                     str(s.get(year_key) or ""), money(val), "", "", "", ""])
-        for r in eq["comps"]:
-            rows.append([e(r["address"]), "" if r.get("distance_mi") is None else f"{r['distance_mi']:.2f}",
-                         f"{r['living_sqft']:,.0f}", str(r.get(year_key) or ""), money(r["appraised_val"]),
-                         f"{r['size_adj']:+,}", f"{r['age_adj']:+,}", f"{r['land_adj']:+,}", money(r["adjusted_val"])])
-        rows.append(["<b>Median adjusted value</b>"] + [""] * 7 + [f"<b>{money(eq['median_adjusted'])}</b>"])
-        story.append(grid(rows, [1.55 * inch, 0.45 * inch, 0.5 * inch, 0.4 * inch, 0.75 * inch, 0.7 * inch,
-                                 0.65 * inch, 0.7 * inch, 0.75 * inch], bold_rows=(1, len(rows) - 1)))
+        rows = [["Address", "Miles", "Sq ft", "Year", "Appraised", "Size adj.", "Age adj.", "Land adj.", "Adjusted"],
+                [f"{street} (subject)", "", f"{s['living_sqft']:,.0f}", str(s.get(year_key) or ""), money(val),
+                 "", "", "", ""]]
+        rows += [[r["address"], "" if r.get("distance_mi") is None else f"{r['distance_mi']:.2f}",
+                  f"{r['living_sqft']:,.0f}", str(r.get(year_key) or ""), money(r["appraised_val"]),
+                  f"{r['size_adj']:+,}", f"{r['age_adj']:+,}", f"{r['land_adj']:+,}", money(r["adjusted_val"])]
+                 for r in eq["comps"]]
+        rows.append(["Median adjusted value"] + [""] * 7 + [money(eq["median_adjusted"])])
         verdict = (f"My appraised value is {money(eq['difference'])} more than this median."
                    if eq["supports_reduction"] else "My appraised value is not above this median.")
-        story.append(p(f"The median of the {eq['count']} adjusted values is <b>{money(eq['median_adjusted'])}</b> "
-                       f"(unadjusted median {money(eq['unadjusted_median'])}). {verdict}"))
+        blocks += [
+            {"t": "h2", "text": f"Evidence {n}: Comparable properties, appropriately adjusted"},
+            p(f"I selected the {eq['count']} most similar properties {where} in the same property category"
+              + (f" and the same {grades}" if grades else "")
+              + f", with {cr['sqft_low']:,}–{cr['sqft_high']:,} sq ft of living area and {cr['year_basis']} between "
+              f"{cr['year_low']} and {cr['year_high']}. Each comparable's appraised value is adjusted to my "
+              "property: living area at the comparable's own improvement value per square foot; age at "
+              f"{prm['age_rate'] * 100:.1f}% of its improvement value per year of difference; land by the "
+              "difference in appraised land value."),
+            {"t": "table", "rows": rows, "widths": [1.55, 0.45, 0.5, 0.4, 0.75, 0.7, 0.65, 0.7, 0.75],
+             "highlight": [1, len(rows) - 1]},
+            p(f"The median of the {eq['count']} adjusted values is ", (money(eq["median_adjusted"]), True),
+              f" (unadjusted median {money(eq['unadjusted_median'])}). {verdict}"),
+        ]
         n += 1
 
     for key, title in SET_TITLES.items():
-        st = content["sets"][key]["stats"]
-        if not st["count"]:
-            continue
-        story.append(p(f"Evidence {n}: {title} (appraised value)", h2))
-        story.append(p(f"{st['count']} properties on the {e(c['cad_abbrev'])} {c['tax_year']} roll match "
-                       f"{e(describe(content['sets'][key]['criteria']))}. Median appraised value "
-                       f"<b>{money(st['median'])}</b>; range {money(st['low'])} to {money(st['high'])}."))
-        n += 1
+        st = sets[key]["stats"]
+        if st["count"]:
+            blocks += [{"t": "h2", "text": f"Evidence {n}: {title} (appraised value)"},
+                       p(f"{st['count']} properties on the {c['cad_abbrev']} {c['tax_year']} roll match "
+                         f"{describe(sets[key]['criteria'])}. Median appraised value ", (money(st["median"]), True),
+                         f"; range {money(st['low'])} to {money(st['high'])}.")]
+            n += 1
 
-    owner = content["owner"]
     if owner["conditions"]:
-        story.append(p("Property-specific conditions", h2))
-        story += [p(f"• {e(x)}") for x in owner["conditions"]]
+        blocks.append({"t": "h2", "text": "Property-specific conditions"})
+        blocks += [p(f"• {x}") for x in owner["conditions"]]
     if owner["repairs"]:
-        story.append(p("Repair costs", h2))
-        rows = [["Description", "Estimated cost"]] + [[e(r["desc"]), money(r["cost"])] for r in owner["repairs"]]
-        rows.append(["<b>Total</b>", f"<b>{money(content['repair_total'])}</b>"])
-        story.append(grid(rows, [4.5 * inch, 1.5 * inch], bold_rows=(len(rows) - 1,)))
-        story.append(p("Copies of the estimates are attached.", small))
+        rows = [["Description", "Estimated cost"]] + [[r["desc"], money(r["cost"])] for r in owner["repairs"]]
+        rows.append(["Total", money(repair_total)])
+        blocks += [{"t": "h2", "text": "Repair costs"},
+                   {"t": "table", "rows": rows, "widths": [4.5, 1.5], "highlight": [len(rows) - 1]},
+                   {"t": "small", "text": "Copies of the estimates are attached."}]
 
-    story.append(p("Requested value", h2))
     base_label = ("Median adjusted value of comparable properties (Evidence 1)" if op["basis"] == "equity"
                   else "Average of the comparison-set median appraised values, rounded to $1,000")
     rows = [["Basis", "Value"], [base_label, money(op["base"])]]
-    if content["repair_total"]:
-        rows.append(["Less: repair costs", f"-{money(content['repair_total'])}"])
-    rows.append(["<b>Requested appraised value</b>", f"<b>{money(op['requested'])}</b>"])
-    story.append(grid(rows, [4.5 * inch, 1.5 * inch], bold_rows=(len(rows) - 1,)))
+    if repair_total:
+        rows.append(["Less: repair costs", f"-{money(repair_total)}"])
+    rows.append(["Requested appraised value", money(op["requested"])])
+    blocks += [
+        {"t": "h2", "text": "Requested value"},
+        {"t": "table", "rows": rows, "widths": [4.5, 1.5], "highlight": [len(rows) - 1]},
+        {"t": "space", "h": 6},
+        p(f"Based on the evidence above, I respectfully request that the Appraisal Review Board reduce the "
+          f"appraised value of my property from {money(val)} to {money(op['requested'])}. Thank you for your "
+          "time and consideration."),
+        {"t": "space", "h": 18},
+        p("Respectfully submitted,"),
+        {"t": "space", "h": 26},
+        p(f"______________________________\n{owner['name']}\n{addr}"),
+        {"t": "space", "h": 14},
+        {"t": "small", "text": f"Data source: {c['cad_name']}, {c['tax_year']} appraisal roll. Prepared with a "
+                               "free self-help tool; not legal or appraisal advice."},
+    ]
+    return {"opinion": op, "address": addr, "owner_name": owner["name"], "blocks": blocks}
 
-    story += [Spacer(1, 6),
-              p(f"Based on the evidence above, I respectfully request that the Appraisal Review Board reduce the "
-                f"appraised value of my property from {money(val)} to {money(op['requested'])}. Thank you for your "
-                "time and consideration."),
-              Spacer(1, 18), p("Respectfully submitted,"), Spacer(1, 26),
-              p(f"______________________________<br/>{e(owner['name'])}<br/>{e(content['address'])}"),
-              Spacer(1, 14),
-              p(f"Data source: {e(c['cad_name'])}, {c['tax_year']} appraisal roll. Prepared with a free self-help "
-                "tool; not legal or appraisal advice.", small)]
+
+def render_pdf(content):
+    """PDF bytes for build() output (reportlab). static/js/pdf.js renders the same blocks in the browser."""
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import LETTER
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import inch
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+    ss = getSampleStyleSheet()
+    body = ParagraphStyle("body", parent=ss["BodyText"], fontName="Times-Roman", fontSize=10.5, leading=14)
+    styles = {
+        "p": body,
+        "small": ParagraphStyle("small", parent=body, fontSize=8, leading=10, textColor=colors.HexColor("#555555")),
+        "title": ParagraphStyle("title", parent=ss["Title"], fontName="Times-Bold", fontSize=17),
+        "h2": ParagraphStyle("h2", parent=ss["Heading2"], fontName="Times-Bold", fontSize=12, spaceBefore=10),
+    }
+    cell = ParagraphStyle("cell", parent=body, fontName="Helvetica", fontSize=7, leading=8.5)
+
+    def markup(text):
+        return escape(text).replace("\n", "<br/>")
+
+    story = []
+    for b in content["blocks"]:
+        if b["t"] == "p":
+            story.append(Paragraph("".join(f"<b>{markup(t)}</b>" if bold else markup(t) for t, bold in b["runs"]),
+                                   body))
+        elif b["t"] in styles:
+            story.append(Paragraph(markup(b["text"]), styles[b["t"]]))
+        elif b["t"] == "space":
+            story.append(Spacer(1, b["h"]))
+        elif b["t"] == "table":
+            hl = b.get("highlight", [])
+            data = [[Paragraph(f"<b>{markup(x)}</b>" if i in hl else markup(x), cell) for x in row]
+                    for i, row in enumerate(b["rows"])]
+            t = Table(data, colWidths=[w * inch for w in b["widths"]], repeatRows=1)
+            style = [("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#999999")),
+                     ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#e8edf3")),
+                     ("VALIGN", (0, 0), (-1, -1), "TOP")]
+            style += [("BACKGROUND", (0, i), (-1, i), colors.HexColor("#e8f5e9")) for i in hl]
+            t.setStyle(TableStyle(style))
+            story.append(t)
+        else:
+            raise ValueError(f"unknown block type {b['t']!r}")
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=LETTER, leftMargin=0.7 * inch, rightMargin=0.7 * inch,
                             topMargin=0.7 * inch, bottomMargin=0.7 * inch,
-                            title=f"Property Tax Protest - {content['address']}", author=owner["name"])
+                            title=f"Property Tax Protest - {content['address']}", author=content["owner_name"])
     doc.build(story)
     return buf.getvalue()
 
